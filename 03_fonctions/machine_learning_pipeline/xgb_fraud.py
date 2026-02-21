@@ -45,40 +45,37 @@ def xgboost_model():
 
     # Modification des types pour les variables à encoder (en cat)
     multi_astype(
-    df,
-    ["type_magasin","etat_client","heure_transaction"],
-    "string"
+        df,
+        ["type_magasin","etat_client","heure_transaction"],
+        "string"
     )
 
     print("Modification des types pour les variables à encoder : OK")
     print("="*50)
 
 
-    # Création des échantillons '2019' et 'test'
+    # Création des échantillons train | validation | test
+    periode_validation = ["January","February","March","April","May","June","July","August","September"]
+
+    data_fraud_2020_validation = df[(df["annee_transaction"]==2020) & (df["mois_transaction"].isin(periode_validation))]
+    data_fraud_2020_test = df[(df["annee_transaction"]==2020) & (~df["mois_transaction"].isin(periode_validation))]
+
+
     variables_a_retirer = ["target","nom_magasin","ville_client","profession_client","numero_transaction",
                            "annee_transaction","latitude_domicile_client","longitude_domicile_client",
                            "latitude_magasin","longitude_magasin","mois_transaction","jour_transaction"]
 
 
-    x_2019 = df[df["annee_transaction"]==2019].drop(variables_a_retirer, axis=1)
-    y_2019 = df[df["annee_transaction"]==2019]["target"]
+    x_train = df[df["annee_transaction"]==2019].drop(variables_a_retirer, axis=1)
+    y_train = df[df["annee_transaction"]==2019]["target"]
 
-    x_test = df[df["annee_transaction"]==2020].drop(variables_a_retirer, axis=1)
-    y_test = df[df["annee_transaction"]==2020]["target"]
+    x_validation = data_fraud_2020_validation.drop(variables_a_retirer, axis=1)
+    y_validation = data_fraud_2020_validation["target"]
 
-    print("Création des échantillons '2019' et 'test' : OK")
-    print("="*50)
+    x_test = data_fraud_2020_test.drop(variables_a_retirer, axis=1)
+    y_test = data_fraud_2020_test["target"]
 
-
-    # Création de l'échantillon 'train' et 'validation'
-    x_train, x_validation, y_train, y_validation = train_test_split(
-        x_2019, y_2019,
-        test_size=0.20,          
-        random_state=1,       
-        stratify=y_2019                   
-    )
-
-    print("Création de l'échantillon 'train' et 'validation' : OK")
+    print("Création des échantillons train | validation | test : OK")
     print("="*50)
 
 
@@ -245,7 +242,10 @@ def xgboost_model():
     joblib.dump(modele, ROOT / "04_model" / "fraud_detection_xgb_pas_calibre.joblib")
 
         # --- x_test
-    x_test.to_parquet(PROCESSED_DATA / "x_test_for_shap.parquet")
+    joblib.dump(x_test, PROCESSED_DATA / "x_test_for_shap.joblib")
+
+        # --- y_test
+    joblib.dump(y_test, PROCESSED_DATA / "y_test_for_shap.joblib")
 
     print("Sauvegarde des modèles + x_test : OK")
     print("="*50)
