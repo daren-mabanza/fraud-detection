@@ -568,3 +568,212 @@ def effect_plot_logit(
 
 
 
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.ensemble import IsolationForest
+
+
+class IsolationForestCustom(BaseEstimator, TransformerMixin):
+    def __init__(self, **if_kwargs):
+        # paramètres passés à IsolationForest (n_estimators, max_samples, etc.)
+        self.if_kwargs = if_kwargs
+
+    def fit(self, X, y=None):
+        # X est un DataFrame (avec transform_output="pandas")
+        self.iso_ = IsolationForest(**self.if_kwargs)
+        self.iso_.fit(X.values)  # entraînement IF
+        return self
+
+    def transform(self, X):
+        # X DataFrame pré-traité
+        # score_samples : plus bas = plus anormal
+        scores = self.iso_.score_samples(X.values)
+
+        X_out = X.copy()
+        X_out["if_score"] = scores  # plus bas = plus suspect
+        return X_out
+
+
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix
+
+class ThresholdCostOptimizer:
+    def __init__(self, cost_fp=20, cost_fn=100, n_thresholds=200):
+        self.cost_fp = cost_fp
+        self.cost_fn = cost_fn
+        self.n_thresholds = n_thresholds
+        self.seuils_ = None
+        self.costs_ = None
+        self.best_threshold_ = None
+        self.best_cost_ = None
+
+    def fit(self, y_true, y_proba):
+        """
+        y_true  : vraies étiquettes (0/1)
+        y_proba : proba de la classe positive (shape (n_samples,))
+        """
+        seuils = np.linspace(0.0, 1.0, self.n_thresholds)
+        costs = []
+
+        for t in seuils:
+            y_pred_t = (y_proba >= t).astype(int)
+            tn, fp, fn, tp = confusion_matrix(y_true, y_pred_t).ravel()
+            cout_total = self.cost_fp * fp + self.cost_fn * fn
+            costs.append(cout_total)
+
+        costs = np.array(costs)
+
+        idx_best = costs.argmin()
+        self.seuils_ = seuils
+        self.costs_ = costs
+        self.best_threshold_ = seuils[idx_best]
+        self.best_cost_ = costs[idx_best]
+
+        return self  # pour chaînage style sklearn[web:301]
+
+    def plot_cost_curve(self):
+        if self.seuils_ is None or self.costs_ is None:
+            raise RuntimeError("Appelle d'abord .fit(y_true, y_proba).")
+
+        best_t = self.best_threshold_
+        best_cost = self.best_cost_
+
+        plt.figure(figsize=(8, 5))
+        plt.plot(self.seuils_, self.costs_, label="Coût total")
+        plt.axvline(x=best_t, color="red", linestyle="--",
+                    label=f"Seuil optimal = {best_t:.3f}")
+        plt.scatter([best_t], [best_cost], color="red")
+
+        plt.annotate(
+            f"t={best_t:.3f}\ncoût={best_cost:.0f}€",
+            xy=(best_t, best_cost),
+            xytext=(best_t + 0.02, best_cost),
+            arrowprops=dict(arrowstyle="->", color="red"),
+            fontsize=9,
+            bbox=dict(boxstyle="round,pad=0.3",
+                      fc="white", ec="red", alpha=0.8),
+        )
+
+        plt.xlabel("Seuil de décision")
+        plt.ylabel("Coût total (FP/FN)")
+        plt.title("Coût en fonction du seuil de décision")
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+        plt.show()
+
+        print(f"Meilleur seuil : {best_t:.3f} | Coût minimal : {best_cost:.2f}€")
+
+    def get_best_threshold(self):
+        return self.best_threshold_
+
+    def get_best_cost(self):
+        return self.best_cost_
+
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import (
+    confusion_matrix, accuracy_score, precision_score, recall_score, f1_score,
+    roc_auc_score, brier_score_loss, matthews_corrcoef, average_precision_score,
+    roc_curve, precision_recall_curve
+)
+
+class BinaryMetricsSimple:
+    """
+    ETAPE 2 : 8 metriques + matrices print/graph + affichage flexible
+    """
+    
+    def __init__(self, y_true: np.ndarray, y_pred: np.ndarray, y_proba: np.ndarray = None):
+        self.y_true = np.array(y_true)
+        self.y_pred = np.array(y_pred)
+        self.y_proba = np.array(y_proba) if y_proba is not None else None
+        
+        # Matrice de confusion
+        self.cm = confusion_matrix(self.y_true, self.y_pred, labels=[0, 1])
+        self.tn, self.fp, self.fn, self.tp = self.cm.ravel()
+        
+        # TOUTES tes 8 metriques
+        self.metrics = self._compute_all_metrics()
+    
+    def _compute_all_metrics(self):
+        """Tes 8 metriques dans l'ordre coherant."""
+        base_metrics = {
+            'accuracy': accuracy_score(self.y_true, self.y_pred),
+            'precision': precision_score(self.y_true, self.y_pred),
+            'recall': recall_score(self.y_true, self.y_pred),
+            'f1': f1_score(self.y_true, self.y_pred),
+            'mcc': matthews_corrcoef(self.y_true, self.y_pred),
+        }
+        
+        if self.y_proba is not None:
+            base_metrics.update({
+                'roc_auc': roc_auc_score(self.y_true, self.y_proba),
+                'brier_score': brier_score_loss(self.y_true, self.y_proba),
+                'average_precision': average_precision_score(self.y_true, self.y_proba)
+            })
+        
+        return base_metrics
+    
+    def show_all_metrics(self):
+        """Affiche TOUTES les 8 metriques en tableau."""
+        df = pd.DataFrame([
+            ['accuracy', self.metrics['accuracy']],
+            ['precision', self.metrics['precision']],
+            ['recall', self.metrics['recall']],
+            ['f1', self.metrics['f1']],
+            ['mcc', self.metrics['mcc']],
+        ], columns=['Metrique', 'Valeur']).round(4)
+        
+        if 'roc_auc' in self.metrics:
+            df_auc = pd.DataFrame([
+                ['roc_auc', self.metrics['roc_auc']],
+                ['brier_score', self.metrics['brier_score']],
+                ['average_precision', self.metrics['average_precision']],
+            ], columns=['Metrique', 'Valeur']).round(4)
+            print("METRIQUES DE BASE")
+            print(df.to_string(index=False))
+            print("\nMETRIQUES PROBABILISTES")
+            print(df_auc.to_string(index=False))
+        else:
+            print("METRIQUES")
+            print(df.to_string(index=False))
+    
+    def show_single_metric(self, metric_name: str):
+        """Affiche UNE seule metrique."""
+        if metric_name not in self.metrics:
+            raise ValueError(f"Metrique '{metric_name}' indisponible. Choix: {list(self.metrics.keys())}")
+        print(f"**{metric_name.upper()}**: {self.metrics[metric_name]:.4f}")
+    
+    def print_confusion_matrix(self):
+        """TON FORMAT EXACT pour matrice !"""
+        print("MATRICE DE CONFUSION")
+        print("=" * 55)
+        print(f"                      Prédit Négatif | Prédit Positif")
+        print(f"Réel Négatif      {self.tn:>14} | {self.fp:>14}")
+        print(f"Réel Positif      {self.fn:>14} | {self.tp:>14}")
+        print("=" * 55)
+    
+    def plot_confusion_matrix(self, figsize=(8, 6)):
+        """Graphique matrice de confusion."""
+        plt.figure(figsize=figsize)
+        sns.heatmap(self.cm, annot=True, fmt='d', cmap='Blues',
+                    xticklabels=['Predire 0', 'Predire 1'],
+                    yticklabels=['Vrai 0', 'Vrai 1'])
+        plt.title('Matrice de Confusion')
+        plt.ylabel('Valeurs reelles')
+        plt.xlabel('Predictions')
+        plt.show()
+    
+    def summary(self):
+        """TOUT : metriques + matrices."""
+        self.show_all_metrics()
+        self.print_confusion_matrix()
+        self.plot_confusion_matrix()
+    
+    def get_metrics_df(self):
+        """Retourne TOUTES les metriques en DataFrame."""
+        return pd.DataFrame(list(self.metrics.items()), columns=['Metrique', 'Valeur']).round(4)

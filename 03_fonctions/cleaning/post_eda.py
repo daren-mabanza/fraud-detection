@@ -21,13 +21,6 @@ def cleaning_post_eda():
     print("="*50)
 
 
-    # Selection des données de 2020
-    df = df[df["annee_transaction"]==2020]
-
-    print("Selection des données de 2020 : OK")
-    print("="*50)
-
-
     # Nettoyage de la variable 'etat_client'
     df["etat_client"] = np.where(
         df["etat_client"].isin(["DC","HI","AK","RI"]),

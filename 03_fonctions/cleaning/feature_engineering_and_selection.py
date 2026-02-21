@@ -17,7 +17,7 @@ PROCESSED_DATA = ROOT / "01_data" / "02_processed"
 def data_fraud_cleaning():
 
     # Import des données et modification des types
-    data_fraud = (pd.read_parquet(RAW_DATA / "fraud_data.parquet")
+    data_fraud_1 = (pd.read_csv(RAW_DATA / "fraudTest.csv")
     .astype({
         "cc_num":"object",
         "zip":"object",
@@ -25,6 +25,17 @@ def data_fraud_cleaning():
         "dob":"datetime64[ns]"
     })
     .drop(["Unnamed: 0"], axis = 1))
+
+    data_fraud_2 = (pd.read_csv(RAW_DATA / "fraudTrain.csv")
+    .astype({
+        "cc_num":"object",
+        "zip":"object",
+        "trans_date_trans_time":"datetime64[ns]",
+        "dob":"datetime64[ns]"
+    })
+    .drop(["Unnamed: 0"], axis = 1))
+
+    data_fraud = pd.concat([data_fraud_1,data_fraud_2])
 
     df = data_fraud.copy()
 
@@ -93,7 +104,6 @@ def data_fraud_cleaning():
     print("Suppressions des variables non utilisables : OK")
     print("="*50)
 
-
     # Controle qualité des données avec Great Expectations
     context = gx.get_context()
 
@@ -108,9 +118,9 @@ def data_fraud_cleaning():
     validator = context.get_validator(batch_request=batch_request)
 
         # Paramétrage des conditions
-    validator.expect_table_column_count_to_equal(19)
     validator.expect_column_to_exist('target')
     validator.expect_column_values_to_not_be_null('target')
+    validator.expect_table_column_count_to_equal(19) 
 
         # Export des données sous condition
     resultats = validator.validate()
