@@ -103,25 +103,24 @@ def graphique_courbe_roc(y_train, train_proba, y_test, test_proba,
     plt.tight_layout()
 
     if save_path:
-        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.savefig(save_path, dpi=300, bbox_inches="tight")
         print(f"Figure sauvegardée : {save_path}")
-
-    plt.show()
 
     overfitting_gap = roc_auc_train - roc_auc_test
 
     print("\n" + "="*40)
     print("RÉSULTATS ROC-AUC")
     print("="*40)
-    print(f"AUC Train    : {roc_auc_train:.4f}")
-    print(f"AUC Test     : {roc_auc_test:.4f}")
-    print(f"Écart        : {overfitting_gap:.4f}")
+    print(f"AUC Train : {roc_auc_train:.4f}")
+    print(f"AUC Test  : {roc_auc_test:.4f}")
+    print(f"Écart     : {overfitting_gap:.4f}")
 
     if overfitting_gap > 0.05:
         print("⚠️  Attention : écart élevé (possible overfitting)")
     else:
         print("✓ Écart acceptable")
     print("="*40)
+
 
 
 
@@ -167,8 +166,6 @@ def graphique_courbe_pr(y_train, train_proba, y_test, test_proba,
     if save_path:
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
         print(f"Figure sauvegardée : {save_path}")
-
-    plt.show()
 
     overfitting_gap = avg_precision_train - avg_precision_test
     lift = avg_precision_test / baseline_test if baseline_test > 0 else 0
@@ -230,8 +227,6 @@ def graphique_courbe_calibration(y_train, train_proba, y_test, test_proba,
     if save_path:
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
         print(f"Figure sauvegardée : {save_path}")
-
-    plt.show()
 
     ece_train = abs(prob_true_train - prob_pred_train).mean()
     ece_test = abs(prob_true_test - prob_pred_test).mean()
@@ -566,31 +561,39 @@ def effect_plot_logit(
     return fig
 
 
-
-
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.ensemble import IsolationForest
+import numpy as np
+import pandas as pd
 
 
 class IsolationForestCustom(BaseEstimator, TransformerMixin):
     def __init__(self, **if_kwargs):
-        # paramètres passés à IsolationForest (n_estimators, max_samples, etc.)
         self.if_kwargs = if_kwargs
+        self.iso_ = None
 
     def fit(self, X, y=None):
-        # X est un DataFrame (avec transform_output="pandas")
+        X_array = np.asarray(X)          # DataFrame ou ndarray
         self.iso_ = IsolationForest(**self.if_kwargs)
-        self.iso_.fit(X.values)  # entraînement IF
+        self.iso_.fit(X_array)
         return self
 
     def transform(self, X):
-        # X DataFrame pré-traité
-        # score_samples : plus bas = plus anormal
-        scores = self.iso_.score_samples(X.values)
+        # Toujours convertir en ndarray puis en DataFrame
+        X_array = np.asarray(X)          # shape (n_samples, n_features)
+        scores = self.iso_.score_samples(X_array)
+        scores = np.asarray(scores).reshape(-1)   # vecteur 1D
 
-        X_out = X.copy()
-        X_out["if_score"] = scores  # plus bas = plus suspect
+        # On reconstruit systématiquement un DataFrame
+        if isinstance(X, pd.DataFrame):
+            cols = list(X.columns)
+        else:
+            cols = [f"col_{i}" for i in range(X_array.shape[1])]
+
+        X_out = pd.DataFrame(X_array, columns=cols)
+        X_out["if_score"] = scores
         return X_out
+
 
 
 

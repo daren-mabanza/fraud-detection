@@ -1,6 +1,5 @@
-01_data/01_raw/fraudTest.csv
-01_data/01_raw/fraudTrain.csv
-01_data/02_processed/data_fraud_eda_processed.parquet
-01_data/02_processed/data_fraud_processed.parquet
-04_model/shap_values_model.joblib
+01_data
+04_model
 hugging_face_token.json
+openai_token.json
+perplexity_api_key.json
