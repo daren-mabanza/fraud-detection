@@ -1,4 +1,12 @@
+# ================================
+# Import des packages nécéssaires
+# ================================
+
 import plotly.graph_objects as go
+
+# =======================
+# Création des fonctions
+# =======================
 
 def plot_cost_threshold_curve(seuils, costs, best_t, best_cost):
     """
@@ -29,7 +37,7 @@ def plot_cost_threshold_curve(seuils, costs, best_t, best_cost):
             y=[best_cost],
             mode="markers",
             name=f"Seuil optimal ({best_t:.4f})",
-            marker=dict(color="red", size=10),
+            marker=dict(color="red", size=13),
             hovertemplate=(
                 "Seuil optimal: %{x:.4f}<br>"
                 "Coût minimum: %{y:,.0f} €<extra></extra>"
@@ -45,21 +53,28 @@ def plot_cost_threshold_curve(seuils, costs, best_t, best_cost):
         line_color="red",
         annotation_text=f"Seuil optimal = {best_t:.3f}",
         annotation_position="top right",
-        annotation_font=dict(color="red", size=14),
+        annotation_font=dict(color="red", size=16),
     )
 
     fig.update_layout(
-        xaxis_title="Seuil de décision",
-        yaxis_title="Coût total (FP/FN) en €",
+        xaxis=dict(
+            title=dict(text="Seuil de décision", font=dict(size=18)),
+            tickfont=dict(size=14),
+        ),
+        yaxis=dict(
+            title=dict(text="Coût total (FP/FN) en €", font=dict(size=18)),
+            tickfont=dict(size=14),
+        ),
         title=dict(
             text="Coût total en fonction du seuil de décision",
             x=0.5,
             xanchor="center",
             y=0.97,
             yanchor="top",
-            font=dict(size=16),
+            font=dict(size=20),
         ),
         hovermode="x unified",
+        hoverlabel=dict(font_size=18),
         legend=dict(
             orientation="v",
             yanchor="top",
@@ -68,8 +83,15 @@ def plot_cost_threshold_curve(seuils, costs, best_t, best_cost):
             x=1.02,
             font=dict(size=14),
         ),
-        margin=dict(l=60, r=120, t=80, b=70),
-        height=520,
+        margin=dict(l=70, r=140, t=90, b=70),
+        height=590,
     )
 
     return fig
+
+
+
+
+
+
+

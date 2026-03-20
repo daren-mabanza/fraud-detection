@@ -1,8 +1,11 @@
-import numpy as np
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
+# ================================
+# Import des packages nécéssaires
+# ================================
+
 import streamlit as st
+import numpy as np
+import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.metrics import (
     accuracy_score,
     precision_score,
@@ -18,6 +21,10 @@ from sklearn.metrics import (
 )
 from sklearn.calibration import calibration_curve
 
+# =======================
+# Création des fonctions
+# =======================
+
 
 def afficher_metriques_binaires(
     y_true,
@@ -28,7 +35,7 @@ def afficher_metriques_binaires(
     """
     Calcule et affiche les métriques d'un modèle de classification binaire
     à partir des vraies étiquettes et des probabilités prédites.
-    Version sans tuiles KPI.
+    Affichage sous forme de tableau HTML.
     """
 
     y_true = np.asarray(y_true)
@@ -45,27 +52,76 @@ def afficher_metriques_binaires(
     brier = brier_score_loss(y_true, y_proba)
     avg_prec = average_precision_score(y_true, y_proba)
 
-    # Tableau récap
-    lignes = [
-        {"Métrique": "Accuracy", "Valeur": round(accuracy, 4)},
-        {"Métrique": "Précision", "Valeur": round(precision, 4)},
-        {"Métrique": "Rappel", "Valeur": round(recall, 4)},
-        {"Métrique": "F1-Score", "Valeur": round(f1, 4)},
-        {"Métrique": "MCC", "Valeur": round(mcc, 4)},
-        {"Métrique": "ROC-AUC", "Valeur": round(roc_auc, 4)},
-        {"Métrique": "Brier score", "Valeur": round(brier, 4)},
-        {"Métrique": "Average precision", "Valeur": round(avg_prec, 4)},
-    ]
-    df = pd.DataFrame(lignes)
-
     st.subheader(title)
     st.markdown(f"*Seuil de décision utilisé :* {seuil_decision:.3f}")
 
-    st.dataframe(
-        df,
-        hide_index=True,
-        use_container_width=True,
-    )
+    html = f"""
+<style>
+    .metrics-table {{
+        border-collapse: collapse;
+        margin-top: 0.75rem;
+        background-color: #f9fafb;
+        color: #111827;
+        min-width: 420px;
+        margin-left: auto;
+        margin-right: auto;
+    }}
+    .metrics-table th, .metrics-table td {{
+        border: 1px solid #e5e7eb;
+        padding: 10px 16px;
+        text-align: left;
+        font-size: 1.0rem;
+    }}
+    .metrics-header {{
+        background-color: #e5e7eb;
+        font-weight: 600;
+    }}
+    .metrics-name {{
+        font-weight: 500;
+    }}
+</style>
+
+<table class="metrics-table">
+    <tr class="metrics-header">
+        <th>Métrique</th>
+        <th>Valeur</th>
+    </tr>
+    <tr>
+        <td class="metrics-name">Accuracy</td>
+        <td>{accuracy:.4f}</td>
+    </tr>
+    <tr>
+        <td class="metrics-name">Précision</td>
+        <td>{precision:.4f}</td>
+    </tr>
+    <tr>
+        <td class="metrics-name">Rappel</td>
+        <td>{recall:.4f}</td>
+    </tr>
+    <tr>
+        <td class="metrics-name">F1-Score</td>
+        <td>{f1:.4f}</td>
+    </tr>
+    <tr>
+        <td class="metrics-name">MCC</td>
+        <td>{mcc:.4f}</td>
+    </tr>
+    <tr>
+        <td class="metrics-name">ROC-AUC</td>
+        <td>{roc_auc:.4f}</td>
+    </tr>
+    <tr>
+        <td class="metrics-name">Brier score</td>
+        <td>{brier:.4f}</td>
+    </tr>
+    <tr>
+        <td class="metrics-name">Average precision</td>
+        <td>{avg_prec:.4f}</td>
+    </tr>
+</table>
+"""
+
+    st.markdown(html, unsafe_allow_html=True)
 
 
 
@@ -93,20 +149,26 @@ def afficher_matrice_confusion(
 <style>
     .cm-table {{
         border-collapse: collapse;
-        margin-top: 0.5rem;
-        background-color: #111111;
-        color: #ffffff;
-        min-width: 260px;
+        margin-top: 0.75rem;
+        background-color: #f9fafb;
+        color: #111827;
+        min-width: 420px;
+        margin-left: auto;
+        margin-right: auto;
     }}
     .cm-table th, .cm-table td {{
-        border: 1px solid #444444;
-        padding: 8px 14px;
+        border: 1px solid #e5e7eb;
+        padding: 10px 16px;
         text-align: center;
         font-size: 1.0rem;
     }}
     .cm-header {{
-        background-color: #222222;
+        background-color: #e5e7eb;
         font-weight: 600;
+    }}
+    .cm-row-label {{
+        background-color: #e5e7eb;
+        font-weight: 500;
     }}
 </style>
 
@@ -117,12 +179,12 @@ def afficher_matrice_confusion(
         <th>Prédit Positif</th>
     </tr>
     <tr>
-        <th class="cm-header">Réel Négatif</th>
+        <th class="cm-row-label">Réel Négatif</th>
         <td>{tn}</td>
         <td>{fp}</td>
     </tr>
     <tr>
-        <th class="cm-header">Réel Positif</th>
+        <th class="cm-row-label">Réel Positif</th>
         <td>{fn}</td>
         <td>{tp}</td>
     </tr>
@@ -130,6 +192,7 @@ def afficher_matrice_confusion(
 """
 
     st.markdown(html, unsafe_allow_html=True)
+
 
 
 

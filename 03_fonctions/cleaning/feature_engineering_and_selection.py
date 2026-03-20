@@ -96,7 +96,7 @@ def data_fraud_cleaning():
     # Suppressions des variables non utilisables
     variables_a_supprimer = ["numero_carte","prenom","nom",
                              "sexe","adresse_client","code_postal_client",
-                             "timestamp_unix_transacation","date_heure_transaction",
+                             "timestamp_unix_transacation",
                              "date_naissance_client"]
 
     df = df.drop(variables_a_supprimer, axis=1)
@@ -120,7 +120,7 @@ def data_fraud_cleaning():
         # Paramétrage des conditions
     validator.expect_column_to_exist('target')
     validator.expect_column_values_to_not_be_null('target')
-    validator.expect_table_column_count_to_equal(19) 
+    validator.expect_table_column_count_to_equal(20) 
 
         # Export des données sous condition
     resultats = validator.validate()

@@ -1,4 +1,6 @@
 # =========================================================================
+# Import des packages nécéssaires 
+# =========================================================================
 from pathlib import Path
 
 import pandas as pd
@@ -9,16 +11,14 @@ from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.compose import make_column_selector
 
-from sklearn.model_selection import train_test_split
-
 from xgboost import XGBClassifier
 
-from sklearn.model_selection import RandomizedSearchCV
+from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 from scipy.stats import randint, uniform, loguniform
 from sklearn.calibration import CalibratedClassifierCV
 
 from fonctions_perso.machine_learning import IsolationForestCustom
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder
 
 from fonctions_perso.machine_learning import ThresholdCostOptimizer
 
@@ -26,13 +26,20 @@ from sklearn import set_config
 set_config(transform_output="pandas")
 
 import joblib
+
+# ==========================================================================
+# Paramétrage de l'environnement de travail
 # ==========================================================================
 ROOT = Path.cwd().parents[0]
 
 RAW_DATA = ROOT / "01_data" / "01_raw"
 PROCESSED_DATA = ROOT / "01_data" / "02_processed"
-# ==========================================================================
+JOBLIB_DATA = ROOT / "01_data" / "03_joblib"
+MODEL_DATA = ROOT / "04_model"
 
+# ==========================================================================
+# Pipeline complète 
+# ==========================================================================
 def xgboost_model():
 
     # Import des données
@@ -55,25 +62,38 @@ def xgboost_model():
 
 
     # Création des échantillons train | validation | test
+    variables_a_retirer = ["target","nom_magasin","ville_client","profession_client","numero_transaction",
+                       "annee_transaction","latitude_domicile_client","longitude_domicile_client",
+                       "latitude_magasin","longitude_magasin","mois_transaction","jour_transaction",
+                       "population_ville_client","distance_domicile_magasin","date_heure_transaction"]
+
     periode_validation = ["January","February","March","April","May","June","July","August","September"]
 
-    data_fraud_2020_validation = df[(df["annee_transaction"]==2020) & (df["mois_transaction"].isin(periode_validation))]
-    data_fraud_2020_test = df[(df["annee_transaction"]==2020) & (~df["mois_transaction"].isin(periode_validation))]
+        # Train trié par ordre de transaction pour préparer la validation croisée temporelle (TimeSeriesSplit)
+    train_2019 = df[df["annee_transaction"]==2019].sort_values(by="date_heure_transaction").reset_index(drop=True)
+
+    x_train = train_2019.drop(variables_a_retirer, axis = 1)
+    y_train = train_2019["target"]
 
 
-    variables_a_retirer = ["target","nom_magasin","ville_client","profession_client","numero_transaction",
-                           "annee_transaction","latitude_domicile_client","longitude_domicile_client",
-                           "latitude_magasin","longitude_magasin","mois_transaction","jour_transaction"]
+        # Test & Validation
+    data_fraud_2020_validation = (df[(df["annee_transaction"]==2020) & (df["mois_transaction"].isin(periode_validation))]
+                                .sort_values(by="date_heure_transaction")
+                                .reset_index(drop=True))
+
+    data_fraud_2020_test = (df[(df["annee_transaction"]==2020) & (~df["mois_transaction"].isin(periode_validation))]
+                            .sort_values(by="date_heure_transaction")
+                            .reset_index(drop=True))
 
 
-    x_train = df[df["annee_transaction"]==2019].drop(variables_a_retirer, axis=1)
-    y_train = df[df["annee_transaction"]==2019]["target"]
-
+            # --- Validation
     x_validation = data_fraud_2020_validation.drop(variables_a_retirer, axis=1)
     y_validation = data_fraud_2020_validation["target"]
 
+            # --- Test
     x_test = data_fraud_2020_test.drop(variables_a_retirer, axis=1)
     y_test = data_fraud_2020_test["target"]
+
 
     print("Création des échantillons train | validation | test : OK")
     print("="*50)
@@ -101,11 +121,6 @@ def xgboost_model():
         ))
     ])
 
-            # -- Standardisation des données 
-    num_pipe = Pipeline([
-        ("scaler", StandardScaler())
-    ])
-
 
     print("Fonctions Preprocessing : OK")
     print("="*50)
@@ -115,7 +130,7 @@ def xgboost_model():
         # XGBoost (Objectif : Stabilité)
             # -- Modèle de base
     xgb = XGBClassifier(
-        scale_pos_weight=200, # 0.995/0.005
+        scale_pos_weight=200, # 0.995/0.005 (Taux de tranaction frauduleuses en train)
         random_state=1,
         n_jobs=-1
     )
@@ -153,14 +168,9 @@ def xgboost_model():
         ("one_hot_encoding", var_cat_pipe, make_column_selector(dtype_exclude=np.number))
     ], remainder="passthrough")
 
-    preprocessing_2 = ColumnTransformer([
-        ("scaler", num_pipe, make_column_selector(dtype_include=np.number))
-    ], remainder="passthrough")
-
     pipeline_complete = Pipeline([
         ("ohe", preprocessing_1),
         ("isolation_forest", all_var_pipe),
-        ("scaler", preprocessing_2),
         ("model", xgb)
     ])
 
@@ -168,14 +178,15 @@ def xgboost_model():
     print("Assemblage complet (Preprocessing + XGB) : OK")
     print("="*50)
 
-
         # Tuning des hyperparamètres
+    tscv = TimeSeriesSplit(n_splits=4)    
+        
     recherche = RandomizedSearchCV(
         estimator = pipeline_complete,
         param_distributions = hyperparametres,
         n_iter = 6,
         scoring = "neg_brier_score",
-        cv = 3,  
+        cv = tscv,  
         return_train_score = True,
         refit = True,
         random_state = 1,
@@ -192,13 +203,13 @@ def xgboost_model():
 
 
         # Calibration des probabilités
-    model_propre = CalibratedClassifierCV(
+    modele_propre = CalibratedClassifierCV(
         estimator = modele,  
         method = 'isotonic',       
         cv = 5                    
     )
 
-    _ = model_propre.fit(x_train, y_train)
+    _ = modele_propre.fit(x_train, y_train)
 
 
     print("Calibration des probabilités : OK")
@@ -206,13 +217,14 @@ def xgboost_model():
 
 
     # Recherche du seuil minimisant les couts sur l'échantillon 'validation'
-    y_validation_proba = model_propre.predict_proba(x_validation)[:,1]
+    y_validation_proba = modele_propre.predict_proba(x_validation)[:,1]
+    df_y_validation_proba = pd.DataFrame(y_validation_proba)
+    df_y_validation_proba = df_y_validation_proba.rename(columns={0:"proba"})
+
 
     cost_optimizer = ThresholdCostOptimizer(cost_fp=25, cost_fn=125, n_thresholds=200)
 
     cost_optimizer.fit(y_validation, y_validation_proba)
-
-    seuil_optimal = cost_optimizer.get_best_threshold()
 
 
     print("Recherche du seuil minimisant les couts sur l'échantillon 'validation' : OK")
@@ -222,30 +234,39 @@ def xgboost_model():
 
     # Entrainement du modèle sur l'échantillon 'train' et 'test'
         # --- Train
-    train_proba = model_propre.predict_proba(x_train)[:,1]
-    train_pred = (train_proba >= seuil_optimal).astype(int)
+    train_proba = modele_propre.predict_proba(x_train)[:,1]
 
         # --- Test
-    test_proba = model_propre.predict_proba(x_test)[:,1]
-    test_pred = (test_proba >= seuil_optimal).astype(int)
+    test_proba = modele_propre.predict_proba(x_test)[:,1]
 
 
     print("Entrainement du modèle sur l'échantillon 'train' et 'test' : OK")
     print("="*50)
 
 
-    # Sauvegarde des modèles et de x_test pour SHAP
-        # --- XGBoost calibré
-    joblib.dump(model_propre, ROOT / "04_model" / "fraud_detection_model_xgboost.joblib") 
+    # Sauvegarde des objets JOBLIB
+    
+        # --- Modalités "etat_client"
+    values_etats_client = data_fraud["etat_client"].value_counts().reset_index()["etat_client"]
+    joblib.dump(values_etats_client, JOBLIB_DATA / "values_etat_client.joblib")
+    
+        # --- Modèles calibré et non calibré
+    joblib.dump(modele, MODEL_DATA / "fraud_detection_xgb_pas_calibre.joblib")  
+    joblib.dump(modele_propre, MODEL_DATA / "fraud_detection_model_xgboost.joblib")
+    
+        # --- Echantillon "validation"
+    joblib.dump(data_fraud_2020_validation["target"], JOBLIB_DATA / "y_validation.joblib")
+    joblib.dump(df_y_validation_proba, JOBLIB_DATA / "proba_validation.joblib")
+    
+        # --- Recherche du cout optimal
+    joblib.dump(cost_optimizer, JOBLIB_DATA / "cost_optimizer.joblib")
+    
+        # --- Données "train" et "test" + probas "train" et "test"
+    joblib.dump(x_test, JOBLIB_DATA / "x_test_for_shap.joblib")
+    joblib.dump(y_train, JOBLIB_DATA / "y_train.joblib")
+    joblib.dump(train_proba, JOBLIB_DATA / "train_proba.joblib")
+    joblib.dump(y_test, JOBLIB_DATA / "y_test_for_shap.joblib")
+    joblib.dump(test_proba, JOBLIB_DATA / "test_proba.joblib") 
 
-        # --- XGBoost non calibré
-    joblib.dump(modele, ROOT / "04_model" / "fraud_detection_xgb_pas_calibre.joblib")
-
-        # --- x_test
-    joblib.dump(x_test, PROCESSED_DATA / "x_test_for_shap.joblib")
-
-        # --- y_test
-    joblib.dump(y_test, PROCESSED_DATA / "y_test_for_shap.joblib")
-
-    print("Sauvegarde des modèles + x_test : OK")
+    print("Sauvegarde des objets JOBLIB : OK")
     print("="*50)

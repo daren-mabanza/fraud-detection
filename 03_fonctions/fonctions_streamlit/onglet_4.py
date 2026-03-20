@@ -1,0 +1,195 @@
+# ================================
+# Import des packages nécéssaires
+# ================================
+
+import streamlit as st
+import pandas as pd
+import numpy as np
+from pathlib import Path
+import joblib
+import random
+from fonctions_streamlit.utilitaires import score_transaction, sample_from_tranche
+
+# ==========================================
+# Paramétrage de l'environnement de travail
+# ==========================================
+
+ROOT = Path.cwd().parents[0]
+JOBLIB_DATA = ROOT / "01_data" / "03_joblib"
+
+# =========
+# Onglet 4
+# =========
+
+
+def onglet_4():
+    st.header("Votre transaction serait-elle considérée comme frauduleuse ?")
+
+    # États qu'on propose explicitement dans l'UI
+    etats_principaux = ["CA", "NY", "TX", "FL", "NJ"]
+    
+    # Liste complète des états hors ceux qui seront explicitement proprosés dans l'UI
+    x_test = joblib.load(JOBLIB_DATA / "x_test_for_shap.joblib")
+    autres_etats = list(x_test["etat_client"].value_counts().reset_index()["etat_client"])
+
+    # Mise en page : deux colonnes
+    col_client, col_tx = st.columns(2, gap="medium")
+
+    # -------------------------
+    # Widgets utilisateur
+    # -------------------------
+    with col_tx:
+        st.subheader("Détails de la transaction")
+
+        type_magasin = st.selectbox(
+            "Type de magasin",
+            [
+                "grocery_pos",
+                "gas_transport",
+                "shopping_pos",
+                "misc_net",
+                "shopping_net",
+                "entertainment",
+                "food_dining",
+                "health_fitness",
+                "personal_care",
+                "travel",
+            ],
+        )
+
+        montant_tranche = st.selectbox(
+            "Montant de la transaction (tranche)",
+            [
+                "0 – 50 €",
+                "50 – 100 €",
+                "100 – 200 €",
+                "200 – 500 €",
+                "500 – 1 000 €",
+                "1 000 – 5 000 €",
+            ],
+        )
+
+        heure = st.selectbox(
+            "Heure de la transaction",
+            list(range(0, 24)),
+            format_func=lambda h: f"{h:02d}h",
+        )
+
+    with col_client:
+        st.subheader("Profil client")
+
+        etat_ui = st.selectbox(
+            "État du client",
+            etats_principaux + ["autre"],
+        )
+
+        age_tranche = st.selectbox(
+            "Âge du client (tranche)",
+            [
+                "18 – 25 ans",
+                "25 – 35 ans",
+                "35 – 50 ans",
+                "50 – 65 ans",
+                "65 – 90 ans",
+            ],
+        )
+
+    st.markdown("---")
+
+    # -------------------------
+    # Bouton d'évaluation
+    # -------------------------
+    if st.button("Évaluer la transaction", type="primary"):
+
+        # Dictionnaires de bornes pour les tranches
+        montant_bounds = {
+            "0 – 50 €": (0, 50),
+            "50 – 100 €": (50, 100),
+            "100 – 200 €": (100, 200),
+            "200 – 500 €": (200, 500),
+            "500 – 1 000 €": (500, 1000),
+            "1 000 – 5 000 €": (1000, 5000),
+        }
+
+        age_bounds = {
+            "18 – 25 ans": (18, 25),
+            "25 – 35 ans": (25, 35),
+            "35 – 50 ans": (35, 50),
+            "50 – 65 ans": (50, 65),
+            "65 – 90 ans": (65, 90),
+        }
+
+        # Tirage aléatoire dans chaque tranche
+        montant = sample_from_tranche(montant_tranche, montant_bounds)
+        age = int(round(sample_from_tranche(age_tranche, age_bounds)))
+
+        # Gestion de "autre" : on choisit un état réel non déjà dans etats_principaux
+        if etat_ui == "autre":
+            etat_effectif = random.choice(autres_etats)
+        else:
+            etat_effectif = etat_ui
+
+        # Dictionnaire final envoyé au modèle (types forcés)
+        input_dict = {
+            "type_magasin": str(type_magasin),
+            "montant_transaction": float(montant),
+            "etat_client": str(etat_effectif),
+            "heure_transaction": str(int(heure)),
+            "age_client": int(age),
+        }
+        
+        # 1. Scoring
+        proba, shap_values, X_proc = score_transaction(input_dict)
+
+        seuil = 0.226
+        decision = "ALERTE FRAUDE" if proba >= seuil else "ACCEPTÉE"
+
+        # Bandeau couleur en haut
+        if decision == "ALERTE FRAUDE":
+            st.markdown(
+                f"""
+                <div style="padding:0.75rem; border-radius:0.5rem;
+                            background-color:#7f1d1d; color:#fef2f2;
+                            border:1px solid #fecaca; margin-bottom:0.75rem;">
+                    <strong>Décision automatique :</strong> transaction signalée comme <strong>suspecte</strong>
+                    (seuil {seuil:.3f}, proba fraude = {proba:.3f}).
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        else:
+            st.markdown(
+                f"""
+                <div style="padding:0.75rem; border-radius:0.5rem;
+                            background-color:#064e3b; color:#ecfdf5;
+                            border:1px solid #6ee7b7; margin-bottom:0.75rem;">
+                    <strong>Décision automatique :</strong> transaction considérée comme
+                    <strong>légitime</strong> (seuil {seuil:.3f}, proba fraude = {proba:.3f}).
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        # Metrics
+        col_score, col_decision = st.columns(2)
+        with col_score:
+            st.metric(
+                label="Probabilité estimée de fraude",
+                value=f"{proba:.3f}",
+            )
+        with col_decision:
+            st.metric(
+                label="Décision (seuil 0,226)",
+                value=decision,
+            )
+
+        # Récap des valeurs utilisées
+        st.markdown("#### Valeurs utilisées pour la simulation")
+        recap = {
+            "type_magasin": [type_magasin],
+            "etat_client": [etat_effectif],
+            "montant_transaction": [round(montant, 2)],
+            "age_client": [age],
+            "heure_transaction": [heure]
+        }
+        st.table(pd.DataFrame(recap))
