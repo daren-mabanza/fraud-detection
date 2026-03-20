@@ -13,3 +13,4 @@ perplexityai
 great-expectations
 requests
 haversine
+altair<5
