@@ -15,7 +15,9 @@ Malgré un taux faible, les enjeux restent donc majeurs :
 - **coûts opérationnels** (enquêtes, remboursements, gestion des incidents)  
 - **dégradation de l’expérience client** en cas de faux positifs  
 
-L’enjeu principal est donc de mettre en place des modèles capables de **détecter efficacement la fraude** tout en limitant les blocages injustifiés, afin de préserver à la fois la **rentabilité** et la **confiance client**.
+L’enjeu principal est donc de mettre en place des modèles capables de **détecter efficacement la fraude**, tout en limitant les blocages injustifiés, afin de préserver à la fois la **rentabilité** et la **confiance client**.
+
+---
 
 ## 2. Objectif
 
@@ -24,26 +26,30 @@ Mettre en place un **pipeline complet de détection de fraude** couvrant l’ens
 Au-delà de la performance pure du modèle, l’objectif est de construire une solution **exploitable en contexte réel**, capable de s’intégrer dans un processus opérationnel.
 
 Cela implique de trouver un compromis réaliste entre :
+
 - la capacité à détecter un maximum de fraudes  
 - la limitation des faux positifs pour éviter une surcharge opérationnelle  
 - la préservation de l’expérience client  
 
-Le projet s’inscrit ainsi dans une logique **orientée métier**, où les décisions du modèle sont évaluées à la fois sur des métriques statistiques et leur **impact économique**.
+Le projet s’inscrit ainsi dans une logique **orientée métier**, où les décisions du modèle sont évaluées à la fois sur des métriques statistiques et sur leur **impact économique**.
+
+---
 
 ## 3. Données
 
 Source : Kaggle  
 https://www.kaggle.com/datasets/kartik2112/fraud-detection
 
-Le dataset contient des transactions simulées mais construites pour reproduire des comportements réalistes.
+Le dataset contient des transactions simulées, mais construites pour reproduire des comportements réalistes.
 
-Caractéristiques principales :
+### Caractéristiques principales
+
 - données transactionnelles bancaires  
-- période 2019–2020  
+- période : 2019–2020  
 - classification binaire (**fraude vs non fraude**)  
 - **très fort déséquilibre**  
 
-Les données couvrent plusieurs dimensions de la transaction :
+### Dimensions des données
 
 - **dimension temporelle** : `trans_date_trans_time` (date et heure de la transaction)  
 - **dimension financière** : `amt` (montant de la transaction)  
@@ -62,7 +68,7 @@ Ces variables permettent de capturer à la fois le contexte de la transaction, l
 Cette étape vise à transformer les données brutes en une base exploitable pour l’analyse et la modélisation.
 
 - fusion des fichiers train et test afin de garantir une cohérence temporelle  
-- nettoyage des données et typage des variables (dates, catégories, numériques)  
+- nettoyage des données et typage des variables (dates, catégorielles, numériques)  
 - renommage des variables pour améliorer la lisibilité métier  
 - suppression des variables inutiles, redondantes ou sensibles  
 - création de variables dérivées :
@@ -84,7 +90,7 @@ Objectifs :
 
 Principaux résultats :
 
-- taux de fraude très faible (~0,05 %) confirmant un problème fortement déséquilibré  
+- taux de fraude très faible (~0,05 %), confirmant un problème fortement déséquilibré  
 - variables les plus discriminantes :
   - `montant_transaction`  
   - `heure_transaction`  
@@ -105,13 +111,15 @@ Le découpage des données est réalisé de manière **strictement chronologique
 
 Ce choix permet de reproduire un scénario réaliste où le modèle est entraîné sur le passé et appliqué sur des données futures.
 
-Il permet également :
+Il permet également de :
 
-- d’éviter toute fuite d’information entre les jeux de données  
-- de capturer d’éventuels effets de **drift temporel**  
-- d’évaluer le modèle dans des conditions proches de la production  
+- éviter toute fuite d’information entre les jeux de données  
+- capturer d’éventuels effets de **drift temporel**  
+- évaluer le modèle dans des conditions proches de la production  
 
 La validation est complétée par des techniques de type **TimeSeriesSplit**, renforçant la robustesse de l’évaluation.
+
+---
 
 ### Modélisation
 
@@ -138,12 +146,18 @@ La validation repose sur un **TimeSeriesSplit**, garantissant l’absence de fui
 
 Deux éléments structurants :
 
-**Calibration des probabilités**
+#### Calibration des probabilités
 
 Une calibration est appliquée afin d’obtenir des probabilités **fiables et interprétables**.  
-C’est un point critique, car ces probabilités sont directement utilisées pour la prise de décision.
+C’est un point critique dans ce contexte, car les décisions opérationnelles (alerte ou non) reposent directement sur ces probabilités.
 
-**Optimisation du seuil**
+Les modèles de type **XGBoost**, bien que très performants en termes de classement (AUC), produisent souvent des probabilités **mal calibrées** : ils peuvent surestimer ou sous-estimer le risque réel.  
+Autrement dit, un score de 0,3 ne correspond pas nécessairement à 30 % de probabilité de fraude.
+
+Dans une logique métier où le seuil est optimisé selon un coût, cette incohérence peut conduire à des décisions sous-optimales.  
+La calibration permet donc d’aligner les probabilités prédites avec la réalité observée et d’améliorer la pertinence des décisions prises à partir du modèle.
+
+#### Optimisation du seuil
 
 Le seuil est optimisé selon une **fonction de coût métier** :
 
@@ -154,6 +168,8 @@ L’objectif est de minimiser le **coût total**, et non une métrique purement 
 
 Ce choix reflète une logique opérationnelle :  
 une fraude non détectée étant nettement plus coûteuse qu’une fausse alerte, le modèle est orienté vers un bon **rappel**, tout en maîtrisant le volume d’alertes.
+
+La combinaison calibration + optimisation du seuil permet ainsi de transformer un modèle performant en un outil réellement **actionnable en production**.
 
 ---
 
@@ -198,12 +214,13 @@ Le modèle est analysé avec **SHAP** afin de comprendre ses décisions, à la f
 
 Variables principales :
 
-- `montant_transaction`
-- `heure_transaction`
-- `if_score`
-- `type_magasin`
+- `montant_transaction`  
+- `heure_transaction`  
+- `if_score`  
+- `type_magasin`  
 
 L’importance globale montre que le modèle repose principalement sur des variables liées :
+
 - au **comportement transactionnel** (montant, heure)  
 - à l’**anomalie** (`if_score`)  
 - au **contexte commerçant** (`type_magasin`)  
@@ -211,6 +228,8 @@ L’importance globale montre que le modèle repose principalement sur des varia
 Le **montant de la transaction** apparaît comme le facteur le plus structurant, avec un impact moyen nettement supérieur aux autres variables.
 
 ![Feature importance](./05_visualisations/feature_importance.png)
+
+---
 
 ### Effets moyens
 
@@ -225,11 +244,14 @@ On observe également une **dispersion importante des contributions**, ce qui in
 
 ![Beeswarm](./05_visualisations/beeswarm_plot.png)
 
+---
+
 ### Explications locales
 
 Chaque décision du modèle est **interprétable individuellement**, ce qui permet d’expliquer précisément une alerte ou une non-alerte.
 
 Transaction non frauduleuse :
+
 - comportement **cohérent avec l’historique**  
 - montant typique  
 - score d’anomalie rassurant  
@@ -238,6 +260,7 @@ Transaction non frauduleuse :
 ![Non fraude](./05_visualisations/fraud_target_0.png)
 
 Transaction frauduleuse :
+
 - comportement **atypique**  
 - montant inhabituel  
 - score d’anomalie élevé  
@@ -246,6 +269,8 @@ Transaction frauduleuse :
 ![Fraude](./05_visualisations/fraud_target_1.png)
 
 Ces exemples illustrent que la décision repose sur une **combinaison de facteurs**, et non sur une seule règle simple.
+
+---
 
 ### Interactions
 
@@ -291,6 +316,8 @@ Cette organisation présente plusieurs avantages :
 
 Le pipeline matérialise ainsi le passage d’un travail exploratoire à une structure **modulaire et proche des standards industriels**.
 
+---
+
 ## 8. Structure du projet
 
 - `01_data` : données brutes et données transformées  
@@ -303,13 +330,15 @@ Le pipeline matérialise ainsi le passage d’un travail exploratoire à une str
 
 Cette structure permet de séparer clairement les phases **exploratoires** des composants **réutilisables**, facilitant la maintenance et l’évolution du projet.
 
+---
+
 ## 9. Application Streamlit
 
 Une application interactive permet de rendre le modèle exploitable dans un **contexte métier réel**.
 
 Elle constitue une interface entre le modèle et les utilisateurs, en facilitant l’accès aux résultats et leur interprétation.
 
-Fonctionnalités :
+### Fonctionnalités
 
 - visualisation des **performances du modèle**  
 - analyse du **coût en fonction du seuil de décision**  
@@ -326,17 +355,29 @@ L’application permet ainsi :
 
 Elle transforme le modèle en un véritable **outil d’aide à la décision**, directement utilisable par des profils métier.
 
+---
+
 ## 10. Conclusion
 
-Le modèle présente une **forte capacité de discrimination**, une **bonne cohérence probabiliste** et un compromis pertinent entre **détection des fraudes** et **coût opérationnel**.
+Le modèle présente :
+
+- une **forte capacité de discrimination**  
+- une **bonne cohérence probabiliste**  
+- un compromis pertinent entre **détection des fraudes** et **coût opérationnel**  
 
 Il permet de détecter une part significative des fraudes tout en maintenant un **volume d’alertes maîtrisé**, compatible avec une utilisation en conditions réelles.
 
 Son exploitation nécessite toutefois un **ajustement du seuil de décision** en fonction de l’évolution du taux de fraude et du contexte métier.
 
 Ce projet illustre le passage d’une approche exploratoire à une solution **structurée, reproductible et orientée métier**, intégrant à la fois :
+
 - des considérations statistiques  
 - des contraintes économiques  
 - des enjeux opérationnels  
 
-L’ensemble constitue une base solide pour une **mise en production** ou des développements futurs (monitoring, gestion du drift, amélioration des features).
+L’ensemble constitue une base solide pour :
+
+- une mise en production  
+- du monitoring  
+- la gestion du drift  
+- l’amélioration continue des features  
