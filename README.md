@@ -199,7 +199,7 @@ Ce graphique illustre l’évolution du coût en fonction du seuil de décision 
 - un seuil trop élevé laisse passer des fraudes, ce qui augmente également le coût  
 - un minimum apparaît pour un seuil intermédiaire  
 
-Le seuil optimal correspond au point minimisant ce coût, ici autour de **0,216**, retenu ensuite à **0,226** pour des raisons de robustesse.
+Le seuil optimal correspond au point minimisant ce coût, ici autour de **0,226**.
 
 Appliqué au jeu de test, il conduit à un **coût total d’environ 134 675 €**, traduisant un compromis efficace entre faux positifs et faux négatifs.
 
@@ -346,6 +346,14 @@ Le pipeline matérialise ainsi le passage d’un travail exploratoire à une str
 - `full_pipeline.py` : orchestration complète du projet  
 
 Cette structure permet de séparer clairement les phases **exploratoires** des composants **réutilisables**, facilitant la maintenance et l’évolution du projet.
+
+---
+
+**Disclaimer**  
+Le projet n’est pas entièrement clonable en l’état. Certains fichiers volumineux ne sont pas inclus dans le repository, notamment :
+
+- les données sources (fichiers CSV)  
+- les objets sérialisés (`.joblib`) contenant les modèles et artefacts  
 
 ---
 

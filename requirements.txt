@@ -1,0 +1,15 @@
+pandas>=2.0
+numpy>=1.24
+scikit-learn>=1.3
+xgboost>=2.0
+matplotlib>=3.7
+seaborn>=0.13
+plotly>=5.18
+streamlit>=1.30
+joblib>=1.3
+shap>=0.44
+great-expectations==0.18.21
+perplexity
+jupyter>=1.0
+notebook>=7.0
+ipykernel>=6.0
