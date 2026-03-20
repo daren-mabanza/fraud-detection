@@ -6,7 +6,16 @@ Ce projet porte sur la détection de **transactions frauduleuses** à partir d�
 
 Le dataset contient environ **1,85 million de transactions** réalisées entre 2019 et 2020, avec une forte asymétrie : une majorité écrasante de transactions légitimes et un taux de fraude d’environ **0,05 %**.
 
-Malgré ce faible taux, les enjeux restent importants : **pertes financières**, **coûts opérationnels** et **dégradation de l’expérience client**. L’objectif est donc de détecter efficacement les fraudes tout en limitant les faux positifs.
+Ce niveau de fraude est cohérent avec les observations réelles. En France, les données de l’Observatoire de la sécurité des moyens de paiement (OSMP) montrent une baisse du taux de fraude ces dernières années, atteignant environ **0,053 % en 2023**.  
+Cependant, l’augmentation du volume des paiements (sans contact, paiement à distance, virement instantané) maintient un **montant total de fraude élevé**, de l’ordre de plusieurs centaines de millions d’euros.
+
+Malgré un taux faible, les enjeux restent donc majeurs :
+
+- **pertes financières** pour les institutions  
+- **coûts opérationnels** (enquêtes, remboursements, gestion des incidents)  
+- **dégradation de l’expérience client** en cas de faux positifs  
+
+L’enjeu principal est donc de mettre en place des modèles capables de **détecter efficacement la fraude** tout en limitant les blocages injustifiés, afin de préserver à la fois la **rentabilité** et la **confiance client**.
 
 ## 2. Objectif
 
