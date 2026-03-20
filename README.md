@@ -45,7 +45,7 @@ Le dataset contient des transactions simulées, mais construites pour reproduire
 ### Caractéristiques principales
 
 - données transactionnelles bancaires  
-- période : 2019–2020  
+- période : 2019-2020  
 - classification binaire (**fraude vs non fraude**)  
 - **très fort déséquilibre**  
 
@@ -74,7 +74,7 @@ Cette étape vise à transformer les données brutes en une base exploitable pou
 - création de variables dérivées :
   - variables temporelles (`heure_transaction`, `jour_transaction`, `mois_transaction`)  
   - âge du client (`age_client`)  
-  - distance domicile–magasin (`distance_domicile_magasin`)  
+  - distance domicile-magasin (`distance_domicile_magasin`)  
 
 Ces transformations permettent d’enrichir l’information disponible tout en réduisant le bruit.
 
