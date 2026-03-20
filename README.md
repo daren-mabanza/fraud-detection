@@ -101,9 +101,9 @@ Le modèle présente des performances élevées, à la fois en termes de métriq
 
 Ces résultats traduisent un bon compromis entre détection et charge opérationnelle.
 
-![Precision-Recall curve](./05_visualisations/pr_curve.png)
+![Precision-Recall curve](./05_visualisations/courbe_pr.png)
 
-![Calibration curve](./05_visualisations/calibration_curve.png)
+![Calibration curve](./05_visualisations/courbe_calibration.png)
 
 Un drift du taux de fraude est observé entre validation et test, impactant la précision et nécessitant un ajustement du seuil.
 
