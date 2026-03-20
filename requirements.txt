@@ -7,10 +7,9 @@ scikit-learn
 scipy
 joblib
 shap
-streamlit
+streamlit==1.55.0
 plotly
 perplexityai
 great-expectations
 requests
 haversine
-altair<5

@@ -1,12 +1,6 @@
 # ============================================================================
 # Import des packages nécéssaires & Paramétrage de l'environnement de travail
 # ============================================================================
-from pathlib import Path
-import sys
-
-ROOT = Path.cwd().parents[0]
-sys.path.append(str(ROOT / "03_fonctions"))
-
 import streamlit as st
 from fonctions_streamlit.onglet_1 import onglet_1
 from fonctions_streamlit.onglet_2 import onglet_2
