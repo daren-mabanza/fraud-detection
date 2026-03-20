@@ -1,4 +1,4 @@
-# Détection de fraude sur transactions par carte bancaire
+# Projet de détection de la fraude sur transactions par carte bancaire
 
 ## 1. Contexte
 
@@ -117,8 +117,6 @@ Il permet également de :
 - capturer d’éventuels effets de **drift temporel**  
 - évaluer le modèle dans des conditions proches de la production  
 
-La validation est complétée par des techniques de type **TimeSeriesSplit**, renforçant la robustesse de l’évaluation.
-
 ---
 
 ### Modélisation
@@ -183,6 +181,25 @@ Le modèle présente des performances élevées, à la fois en termes de métriq
 - Alert rate ≈ **0,51 %** des transactions  
 
 Le **seuil optimal (0,226)** est déterminé sur l’échantillon de validation en minimisant le coût.
+
+### Optimisation du seuil de décision
+
+Le choix du seuil repose sur une **approche orientée métier**, consistant à minimiser le coût total lié aux erreurs de classification :
+
+- faux positif : 25 €  
+- faux négatif : 125 €  
+
+Pour cela, le coût total (FP + FN pondérés) est calculé pour différents seuils sur l’échantillon de validation.
+
+![Coût en fonction du seuil](./05_visualisations/cost_optimizer.png)
+
+Ce graphique illustre l’évolution du coût en fonction du seuil de décision :
+
+- un seuil trop faible entraîne un grand nombre de faux positifs, donc un coût élevé  
+- un seuil trop élevé laisse passer des fraudes, ce qui augmente également le coût  
+- un minimum apparaît pour un seuil intermédiaire  
+
+Le seuil optimal correspond au point minimisant ce coût, ici autour de **0,216**, retenu ensuite à **0,226** pour des raisons de robustesse.
 
 Appliqué au jeu de test, il conduit à un **coût total d’environ 134 675 €**, traduisant un compromis efficace entre faux positifs et faux négatifs.
 
