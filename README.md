@@ -34,33 +34,75 @@ Caractéristiques principales :
 - classification binaire (**fraude vs non fraude**)  
 - **très fort déséquilibre**  
 
+Les données couvrent plusieurs dimensions de la transaction :
+
+- **dimension temporelle** : `trans_date_trans_time` (date et heure de la transaction)  
+- **dimension financière** : `amt` (montant de la transaction)  
+- **dimension client** : `city`, `state`, `job`, `dob`  
+- **dimension commerçant** : `merchant`, `category`  
+- **dimension géographique** : `lat`, `long`, `merch_lat`, `merch_long`  
+- **identifiants techniques** : `cc_num`, `trans_num`, `unix_time`  
+- **variable cible** : `is_fraud`  
+
+Ces variables permettent de capturer à la fois le contexte de la transaction, le profil du client et les caractéristiques du commerçant, éléments essentiels pour détecter des comportements frauduleux.
+
 ## 4. Méthodologie
 
 ### Préparation des données
 
-- fusion des fichiers train et test  
-- nettoyage et renommage des variables  
-- suppression des variables inutiles ou sensibles  
-- création de variables (temps, âge, distance)
+Cette étape vise à transformer les données brutes en une base exploitable pour l’analyse et la modélisation.
+
+- fusion des fichiers train et test afin de garantir une cohérence temporelle  
+- nettoyage des données et typage des variables (dates, catégories, numériques)  
+- renommage des variables pour améliorer la lisibilité métier  
+- suppression des variables inutiles, redondantes ou sensibles  
+- création de variables dérivées :
+  - variables temporelles (`heure_transaction`, `jour_transaction`, `mois_transaction`)  
+  - âge du client (`age_client`)  
+  - distance domicile–magasin (`distance_domicile_magasin`)  
+
+Ces transformations permettent d’enrichir l’information disponible tout en réduisant le bruit.
+
+---
 
 ### Analyse exploratoire
 
-Objectifs : comprendre les données, identifier les variables pertinentes et vérifier la **stabilité temporelle**.
+Objectifs :
+
+- comprendre la structure des données  
+- identifier les variables discriminantes  
+- vérifier la **stabilité temporelle**  
 
 Principaux résultats :
-- taux de fraude très faible (~0,05 %)  
-- variables les plus discriminantes : **montant**, **heure**, **type de magasin**  
-- suppression des variables peu informatives ou trop bruitées  
+
+- taux de fraude très faible (~0,05 %) confirmant un problème fortement déséquilibré  
+- variables les plus discriminantes :
+  - `montant_transaction`  
+  - `heure_transaction`  
+  - `type_magasin`  
+- identification et suppression de variables peu informatives, trop bruitées ou fortement sparsées  
+
+Cette étape permet de guider les choix de modélisation et de limiter le risque de surapprentissage.
+
+---
 
 ### Stratégie de validation
 
-Découpage temporel :
+Le découpage des données est réalisé de manière **strictement chronologique** :
 
 - train : 2019  
 - validation : janvier à septembre 2020  
 - test : octobre à décembre 2020  
 
-Ce choix permet de simuler un cadre **réel de détection** et d’éviter toute fuite d’information.
+Ce choix permet de reproduire un scénario réaliste où le modèle est entraîné sur le passé et appliqué sur des données futures.
+
+Il permet également :
+
+- d’éviter toute fuite d’information entre les jeux de données  
+- de capturer d’éventuels effets de **drift temporel**  
+- d’évaluer le modèle dans des conditions proches de la production  
+
+La validation est complétée par des techniques de type **TimeSeriesSplit**, renforçant la robustesse de l’évaluation.
 
 ### Modélisation
 
@@ -147,43 +189,67 @@ Le modèle est analysé avec **SHAP** afin de comprendre ses décisions, à la f
 
 Variables principales :
 
-- **montant de la transaction**  
-- **heure de la transaction**  
-- **score d’anomalie (`if_score`)**  
-- **type de magasin**  
+- `montant_transaction`
+- `heure_transaction`
+- `if_score`
+- `type_magasin`
+
+L’importance globale montre que le modèle repose principalement sur des variables liées :
+- au **comportement transactionnel** (montant, heure)  
+- à l’**anomalie** (`if_score`)  
+- au **contexte commerçant** (`type_magasin`)  
+
+Le **montant de la transaction** apparaît comme le facteur le plus structurant, avec un impact moyen nettement supérieur aux autres variables.
 
 ![Feature importance](./05_visualisations/feature_importance.png)
 
 ### Effets moyens
 
-L’analyse des contributions met en évidence plusieurs comportements :
+L’analyse des contributions (beeswarm) permet de comprendre comment les variables influencent le score de fraude :
 
-- des **montants atypiques** (faibles ou élevés) sont plus risqués  
-- certaines **plages horaires** sont plus exposées  
-- les transactions jugées **anormales** sont plus susceptibles d’être frauduleuses  
+- des **montants atypiques** (très faibles ou très élevés) ont un impact positif sur le risque  
+- les montants intermédiaires sont davantage associés à des transactions légitimes  
+- certaines **plages horaires** (notamment tard le soir) augmentent significativement le score  
+- un **`if_score` faible** (transaction jugée anormale) est fortement corrélé à la fraude  
+
+On observe également une **dispersion importante des contributions**, ce qui indique que l’effet des variables dépend fortement du contexte global.
 
 ![Beeswarm](./05_visualisations/beeswarm_plot.png)
 
 ### Explications locales
 
-Chaque décision du modèle est **interprétable individuellement**, ce qui permet de comprendre précisément les facteurs de risque.
+Chaque décision du modèle est **interprétable individuellement**, ce qui permet d’expliquer précisément une alerte ou une non-alerte.
 
 Transaction non frauduleuse :
 - comportement **cohérent avec l’historique**  
-- **faible probabilité** de fraude  
+- montant typique  
+- score d’anomalie rassurant  
+→ contribution globale négative vers la fraude  
 
 ![Non fraude](./05_visualisations/fraud_target_0.png)
 
 Transaction frauduleuse :
 - comportement **atypique**  
-- **accumulation de signaux de risque**  
+- montant inhabituel  
+- score d’anomalie élevé  
+→ accumulation de contributions positives vers la fraude  
 
 ![Fraude](./05_visualisations/fraud_target_1.png)
 
+Ces exemples illustrent que la décision repose sur une **combinaison de facteurs**, et non sur une seule règle simple.
+
 ### Interactions
 
-Le modèle ne repose pas sur des règles simples.  
-Il combine plusieurs variables pour estimer le risque, ce qui permet de capturer des **patterns de fraude complexes**.
+Le modèle ne suit pas une logique linéaire du type *“gros montant = fraude”*.  
+Il combine plusieurs variables pour estimer le risque.
+
+Le graphique d’interaction montre que :
+
+- un même **montant** peut être risqué ou non  
+- cela dépend du **score d’anomalie**, de l’**heure** ou du **type de magasin**  
+- les effets sont **non linéaires et contextuels**  
+
+Cela confirme que le modèle capte des **patterns de fraude complexes**, proches de comportements réels.
 
 ![Dependence plot](./05_visualisations/dependence_plot.png)
 
@@ -191,15 +257,30 @@ Il combine plusieurs variables pour estimer le risque, ce qui permet de capturer
 
 Le projet est structuré sous forme de **pipeline exécutable** :
 
-full_fraud_detection_projet()
+`full_fraud_detection_projet()`
 
-Il enchaîne :
+Cette fonction permet de lancer l’ensemble du workflow de manière **séquentielle, reproductible et contrôlée**, depuis les données brutes jusqu’au modèle final.
 
-- feature engineering  
-- nettoyage post-EDA  
-- modélisation complète  
+Le pipeline enchaîne les étapes suivantes :
 
-Cette organisation garantit la **reproductibilité des résultats** et s’inscrit dans une logique proche des pratiques **MLOps**.
+- **feature engineering et premier nettoyage** des données  
+- **nettoyage post-EDA**, basé sur les choix d’analyse (sélection de variables, regroupements)  
+- **modélisation complète** :
+  - preprocessing  
+  - entraînement  
+  - calibration des probabilités  
+  - optimisation du seuil  
+
+Chaque étape est implémentée sous forme de fonctions dédiées, ce qui permet de **séparer clairement les responsabilités** et de faciliter la maintenance.
+
+Cette organisation présente plusieurs avantages :
+
+- **reproductibilité complète des résultats**  
+- cohérence entre les différentes phases du projet  
+- réutilisation des briques dans d’autres contextes (notebooks, application)  
+- transition naturelle vers une logique **MLOps**  
+
+Le pipeline matérialise ainsi le passage d’un travail exploratoire à une structure **modulaire et proche des standards industriels**.
 
 ## 8. Structure du projet
 
@@ -215,23 +296,38 @@ Cette structure permet de séparer clairement les phases **exploratoires** des c
 
 ## 9. Application Streamlit
 
-Une application interactive permet de rendre le modèle exploitable dans un contexte métier.
+Une application interactive permet de rendre le modèle exploitable dans un **contexte métier réel**.
+
+Elle constitue une interface entre le modèle et les utilisateurs, en facilitant l’accès aux résultats et leur interprétation.
 
 Fonctionnalités :
 
-- visualisation des performances  
-- analyse du coût  
-- explicabilité des décisions (SHAP)  
-- simulation de transactions  
+- visualisation des **performances du modèle**  
+- analyse du **coût en fonction du seuil de décision**  
+- explicabilité des décisions via **SHAP**  
+- simulation de transactions en temps réel  
 
 Une brique d’**IA générative (LLM Sonar - Perplexity)** est intégrée afin de traduire les explications techniques en **langage naturel**, facilitant leur compréhension par des utilisateurs non techniques.
 
-L’application transforme ainsi le modèle en un véritable **outil d’aide à la décision**.
+L’application permet ainsi :
+
+- de **justifier une alerte**  
+- d’**expliquer une décision**  
+- d’**aider à l’ajustement du seuil**  
+
+Elle transforme le modèle en un véritable **outil d’aide à la décision**, directement utilisable par des profils métier.
 
 ## 10. Conclusion
 
-Le modèle présente une **forte capacité de discrimination**, une **bonne cohérence probabiliste** et un compromis pertinent entre détection et coût opérationnel.
+Le modèle présente une **forte capacité de discrimination**, une **bonne cohérence probabiliste** et un compromis pertinent entre **détection des fraudes** et **coût opérationnel**.
 
-Il est exploitable en contexte réel, sous réserve d’un **ajustement du seuil** en fonction des conditions observées.
+Il permet de détecter une part significative des fraudes tout en maintenant un **volume d’alertes maîtrisé**, compatible avec une utilisation en conditions réelles.
 
-Ce projet illustre le passage d’une approche exploratoire à une solution **structurée, reproductible et orientée métier**, proche des pratiques industrielles en data science.
+Son exploitation nécessite toutefois un **ajustement du seuil de décision** en fonction de l’évolution du taux de fraude et du contexte métier.
+
+Ce projet illustre le passage d’une approche exploratoire à une solution **structurée, reproductible et orientée métier**, intégrant à la fois :
+- des considérations statistiques  
+- des contraintes économiques  
+- des enjeux opérationnels  
+
+L’ensemble constitue une base solide pour une **mise en production** ou des développements futurs (monitoring, gestion du drift, amélioration des features).
