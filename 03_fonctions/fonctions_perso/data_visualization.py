@@ -2,7 +2,6 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import math
 import numpy as np
-import pandas as pd
 
 def plot_grille_distribution(df, columns=None, n_cols=3, figsize=(16, 4)):
     """
