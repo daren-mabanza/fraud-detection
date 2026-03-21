@@ -26,7 +26,7 @@ def get_llm_client():
     """
     api_key = st.secrets["PERPLEXITY_API_KEY"]
     
-    return api_key
+    return Perplexity(api_key=api_key)
 
 
 def build_prompt_for_transaction(proba, input_dict, top_features):
