@@ -6,6 +6,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 from fonctions_perso.data_manipulation import multi_astype
+from fonctions_perso.data_manipulation import stratified_sample
 
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
@@ -22,10 +23,13 @@ from sklearn.preprocessing import OneHotEncoder
 
 from fonctions_perso.machine_learning import ThresholdCostOptimizer
 
+import joblib
+import shap
+
 from sklearn import set_config
 set_config(transform_output="pandas")
 
-import joblib
+
 
 # ==========================================================================
 # Paramétrage de l'environnement de travail
@@ -223,6 +227,13 @@ def xgboost_model():
 
 
     cost_optimizer = ThresholdCostOptimizer(cost_fp=25, cost_fn=125, n_thresholds=200)
+    
+    cost_optimizer_artifacts = {
+        "seuils": cost_optimizer.seuils_,
+        "costs": cost_optimizer.costs_,
+        "best_threshold": cost_optimizer.get_best_threshold(),
+        "best_cost": cost_optimizer.get_best_cost()
+    }
 
     cost_optimizer.fit(y_validation, y_validation_proba)
 
@@ -245,28 +256,67 @@ def xgboost_model():
 
 
     # Sauvegarde des objets JOBLIB
+    full_test = pd.concat([x_test,y_test], axis = 1)
+
+    full_test_sample = stratified_sample(
+        df=full_test,
+        target="target",
+        n=35000,
+        random_state=123
+    )
+
+    x_test_sample = full_test_sample.drop(["target"], axis = 1)
     
-        # --- Modalités "etat_client"
-    values_etats_client = data_fraud["etat_client"].value_counts().reset_index()["etat_client"]
-    joblib.dump(values_etats_client, JOBLIB_DATA / "values_etat_client.joblib")
     
-        # --- Modèles calibré et non calibré
+        # Modèles 
     joblib.dump(modele, MODEL_DATA / "fraud_detection_xgb_pas_calibre.joblib")  
-    joblib.dump(modele_propre, MODEL_DATA / "fraud_detection_model_xgboost.joblib")
-    
-        # --- Echantillon "validation"
-    joblib.dump(data_fraud_2020_validation["target"], JOBLIB_DATA / "y_validation.joblib")
-    joblib.dump(df_y_validation_proba, JOBLIB_DATA / "proba_validation.joblib")
-    
-        # --- Recherche du cout optimal
-    joblib.dump(cost_optimizer, JOBLIB_DATA / "cost_optimizer.joblib")
-    
-        # --- Données "train" et "test" + probas "train" et "test"
-    joblib.dump(x_test, JOBLIB_DATA / "x_test_for_shap.joblib")
+    joblib.dump(modele_propre, MODEL_DATA / "fraud_detection_model_xgboost.joblib") 
+
+        # Train
     joblib.dump(y_train, JOBLIB_DATA / "y_train.joblib")
     joblib.dump(train_proba, JOBLIB_DATA / "train_proba.joblib")
-    joblib.dump(y_test, JOBLIB_DATA / "y_test_for_shap.joblib")
-    joblib.dump(test_proba, JOBLIB_DATA / "test_proba.joblib") 
+
+        # Validation
+    joblib.dump(data_fraud_2020_validation["target"], JOBLIB_DATA / "y_validation.joblib")
+    joblib.dump(df_y_validation_proba, JOBLIB_DATA / "proba_validation.joblib")
+
+        # Test complet
+    joblib.dump(y_test, JOBLIB_DATA / "y_test.joblib")
+    joblib.dump(test_proba, JOBLIB_DATA / "test_proba.joblib")
+
+        # Objet CostOptimizer contenant le seuil optimal
+    joblib.dump(cost_optimizer, JOBLIB_DATA / "cost_optimizer.joblib")
+    joblib.dump(cost_optimizer_artifacts, JOBLIB_DATA / "cost_optimizer_artifacts.joblib")
+
+        # Liste des modalités de la variable "etat_client"
+    values_etats_client = df["etat_client"].value_counts().reset_index()["etat_client"]
+    joblib.dump(list(values_etats_client), JOBLIB_DATA / "values_etat_client.joblib")
+
+        # Echantillons de données pour l'onglet 3 de l'application Streamlit
+    fraud_1 = full_test[full_test["target"]==1].sample(5)
+    fraud_0 = full_test[full_test["target"]==0].sample(5)
+
+    test_sample_onglet_3 = pd.concat([fraud_0,fraud_1], axis=0).sample(10)
+    joblib.dump(test_sample_onglet_3, JOBLIB_DATA / "test_sample_onglet_3.joblib")
+    
+        # Echantillon de données "x_test_sample"
+    joblib.dump(x_test_sample, JOBLIB_DATA / "x_test_sample.joblib")
+
+        # Sauvegarde de l'explainer et des SHAP Values + x_test_processed
+        
+    x_test_proc = modele[:-1].transform(x_test_sample) # x_test_sample avec preprocessing uniquement (sans le modèle)
+    xgb = modele.named_steps["model"]                  # juste le modèle sans les étapes de preprocessing
+
+    explainer = shap.TreeExplainer(xgb, x_test_proc)   # Initialisation de l'explainer
+    shap_values = explainer(x_test_proc)               # SHAP Values
+
+        
+    joblib.dump(x_test_proc, JOBLIB_DATA / "x_test_processed.joblib")
+    joblib.dump(explainer, JOBLIB_DATA / "explainer.joblib")
+    joblib.dump(shap_values, JOBLIB_DATA / "shap_values_modele.joblib")
+
+        # Sauvegarde de full_test_sample
+    joblib.dump(full_test_sample, JOBLIB_DATA / "full_test_sample.joblib")
 
     print("Sauvegarde des objets JOBLIB : OK")
     print("="*50)

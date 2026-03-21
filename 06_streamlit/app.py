@@ -1,6 +1,7 @@
 # ============================================================================
 # Import des packages nécéssaires & Paramétrage de l'environnement de travail
 # ============================================================================
+from config import ROOT
 import streamlit as st
 from fonctions_streamlit.onglet_1 import onglet_1
 from fonctions_streamlit.onglet_2 import onglet_2

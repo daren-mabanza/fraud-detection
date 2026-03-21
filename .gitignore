@@ -1,8 +1,5 @@
 01_data/01_raw
 01_data/02_processed
-01_data/03_joblib/shap_values_model.joblib
-01_data/03_joblib/x_test_processed.joblib
-04_model/shap_values_model.joblib
 hugging_face_token.json
 openai_token.json
 perplexity_api_key.json

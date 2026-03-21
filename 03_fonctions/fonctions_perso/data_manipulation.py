@@ -301,3 +301,52 @@ def fillna_multi(df, cols, value):
         print(f"  - {c} -> '{value}'")
 
 
+import pandas as pd
+
+def stratified_sample(df, target, frac=None, n=None, random_state=42):
+    """
+    Retourne un sous-échantillon stratifié selon une variable cible.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataset initial
+    target : str
+        Nom de la variable de stratification (ex: 'is_fraud')
+    frac : float, optional
+        Fraction du dataset à garder (ex: 0.1 pour 10%)
+    n : int, optional
+        Nombre total d'observations à garder
+    random_state : int
+        Seed pour reproductibilité
+
+    Returns
+    -------
+    pd.DataFrame
+        Sous-échantillon stratifié
+    """
+
+    if frac is None and n is None:
+        raise ValueError("Spécifie soit 'frac', soit 'n'.")
+
+    if frac is not None and n is not None:
+        raise ValueError("Spécifie uniquement 'frac' ou 'n', pas les deux.")
+
+    # Cas 1 : échantillonnage par proportion
+    if frac is not None:
+        return (
+            df.groupby(target, group_keys=False)
+              .apply(lambda x: x.sample(frac=frac, random_state=random_state))
+              .reset_index(drop=True)
+        )
+
+    # Cas 2 : échantillonnage par nombre total
+    proportions = df[target].value_counts(normalize=True)
+
+    samples = []
+    for cls, prop in proportions.items():
+        n_cls = int(n * prop)
+        subset = df[df[target] == cls]
+        samples.append(subset.sample(n=n_cls, random_state=random_state))
+
+    return pd.concat(samples).sample(frac=1, random_state=random_state).reset_index(drop=True)
