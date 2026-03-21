@@ -24,12 +24,9 @@ def get_llm_client():
     """
     Charge la clé API Perplexity depuis le fichier JSON et renvoie un client Perplexity prêt à l'emploi.
     """
-    perplexity_json = "perplexity_api_key.json" # Nom du JSON
-    with open(ROOT / perplexity_json, "r") as f:
-        secrets = json.load(f)
-
-    token = secrets["PERPLEXITY_API_KEY"] # Récupération de la clé API du JSON
-    return Perplexity(api_key=token)
+    api_key = st.secrets["PERPLEXITY_API_KEY"]
+    
+    return api_key
 
 
 def build_prompt_for_transaction(proba, input_dict, top_features):
