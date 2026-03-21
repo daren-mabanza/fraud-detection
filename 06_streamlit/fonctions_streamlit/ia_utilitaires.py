@@ -62,28 +62,26 @@ def build_prompt_for_transaction(proba, input_dict, top_features):
     top_str = "\n".join(top_str)
 
     prompt = f"""
-Tu es un conseiller clientèle d'une banque française, chaleureux et professionnel.
-Explique à un client pourquoi son paiement a été {decision} par le système de sécurité.
+Un client te contacte au sujet de son paiement de {input_dict.get('montant_transaction', 'N/A')} € 
+dans un {input_dict.get('type_magasin', 'N/A')} à {input_dict.get('heure_transaction', 'N/A')}h, 
+qui a été {decision}.
 
-TRANSACTION :
-- Montant : {input_dict.get('montant_transaction', 'N/A')} €
-- Type de magasin : {input_dict.get('type_magasin', 'N/A')}
-- Heure : {input_dict.get('heure_transaction', 'N/A')} h
-
-FACTEURS PRINCIPAUX (issus de l'analyse automatique) :
+Voici les facteurs qui ont influencé cette décision :
 {top_str}
 
-Consignes STRICTES — respecte-les absolument :
-- Écris uniquement du texte brut, sans aucune mise en forme.
-- N'utilise JAMAIS de crochets, de numéros entre crochets comme [1] ou [2], ni aucune référence de citation. Aucun. Jamais.
-- N'utilise pas de puces, de tirets, de gras ou d'italique.
-- N'indique pas le nombre de mots ni aucun commentaire méta sur ta réponse.
-- Rédige en langage naturel, comme si tu parlais directement au client au téléphone.
-- Reste rassurant, factuel et concis. Deux courts paragraphes maximum.
-- Explique quels éléments ont déclenché l'alerte et pourquoi c'est une mesure de protection normale.
-- Vocabulaire courant uniquement : "supermarché", "magasin de shopping", "station-service". Jamais de termes techniques.
-- Rédige en 3 à 4 phrases maximum. Termine toujours ta dernière phrase correctement.
-- Explique quels facteurs font que la transaction est refusé. Ne parle pas pour rien dire. Centre toi sur la transaction D'ABORD. les éléments pour te mettre dans la peau d'un conseiller APRES !
+Explique-lui en 3 à 4 phrases ce qui a concrètement fait monter le risque et ce qui l'a fait baisser, 
+en te basant UNIQUEMENT sur ces facteurs. 
+
+Règles absolues :
+- Commence directement par les facteurs de risque, sans introduction ni formule de politesse.
+- Cite chaque facteur avec sa valeur réelle (montant, heure, type de magasin...).
+- Sépare clairement ce qui a augmenté le risque de ce qui l'a réduit.
+- Termine par une phrase courte sur la décision finale et pourquoi.
+- Texte brut uniquement : aucun crochet, aucune puce, aucun [1] ou [2], aucun gras.
+- Langage simple et naturel. Jamais de jargon technique (SHAP, algorithme, modèle, score).
+- Si tu mentionnes l'indicateur d'anomalie de la transaction (if_score), précise bien que cette transaction 
+  est inhabituelle par rapport à l'ensemble des transactions de nos clients en général, 
+  et NON par rapport à l'historique personnel de ce client.
 """
 
     return prompt
@@ -115,11 +113,10 @@ def call_llm_explanation(tx_key, proba, shap_values, input_dict, feature_names, 
                 {
                     "role": "system",
                     "content": (
-                        "Tu es un analyste fraude bancaire. "
-                        "Réponses courtes (200-235 mots), rassurantes, "
-                        "professionnelles. Jamais de jargon technique "
-                        "(SHAP, XGBoost, calibration, API). "
-                        "Toujours lier caractéristiques transaction + décision + facteurs risque."
+                        "Tu es un conseiller fraude bancaire. "
+                        "Tu expliques des décisions de paiement en te basant uniquement sur les faits concrets de la transaction. "
+                        "Texte brut uniquement, sans crochets, sans numéros de citation, sans mise en forme. "
+                        "Tu vas droit au but : facteurs de risque d'abord, facteurs rassurants ensuite, conclusion."
                     ),
                 },
                 {"role": "user", "content": prompt},
