@@ -82,6 +82,8 @@ Consignes STRICTES — respecte-les absolument :
 - Reste rassurant, factuel et concis. Deux courts paragraphes maximum.
 - Explique quels éléments ont déclenché l'alerte et pourquoi c'est une mesure de protection normale.
 - Vocabulaire courant uniquement : "supermarché", "magasin de shopping", "station-service". Jamais de termes techniques.
+- Rédige en 3 à 4 phrases maximum. Termine toujours ta dernière phrase correctement.
+- Explique quels facteurs font que la transaction est refusé. Ne parle pas pour rien dire. Centre toi sur la transaction D'ABORD. les éléments pour te mettre dans la peau d'un conseiller APRES !
 """
 
     return prompt
@@ -123,7 +125,7 @@ def call_llm_explanation(tx_key, proba, shap_values, input_dict, feature_names, 
                 {"role": "user", "content": prompt},
             ],
             temperature=0.2,
-            max_tokens=250,
+            max_tokens=450,
         )
         content = completion.choices[0].message.content.strip()
         explanation = content if content else "Explication temporaire indisponible."
