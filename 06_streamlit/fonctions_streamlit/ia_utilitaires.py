@@ -62,9 +62,8 @@ def build_prompt_for_transaction(proba, input_dict, top_features):
     top_str = "\n".join(top_str)
 
     prompt = f"""
-Tu es un analyste fraude expérimenté dans une banque française.
-Explique à un client, en langage simple et rassurant, pourquoi son paiement
-a été {decision} par le système automatique.
+Tu es un conseiller clientèle d'une banque française, chaleureux et professionnel.
+Explique à un client pourquoi son paiement a été {decision} par le système de sécurité.
 
 TRANSACTION :
 - Montant : {input_dict.get('montant_transaction', 'N/A')} €
@@ -74,15 +73,17 @@ TRANSACTION :
 FACTEURS PRINCIPAUX (issus de l'analyse automatique) :
 {top_str}
 
-Consignes :
-- Reste factuel et concentré uniquement sur cette transaction.
-- Explique simplement quels éléments augmentent le risque et lesquels le réduisent.
-- Utilise un vocabulaire courant : par exemple "magasin de shopping", "supermarché",
-"station-service", pas les noms techniques comme "shopping_pos" ou "gas_transport".
-- Ne mentionne pas de termes techniques (modèle, algorithme, SHAP, XGBoost, calibration, API).
-- Pas de pourcentages ni de statistiques globales, uniquement le cas concret du client.
-- Formule ta réponse en 1 ou 2 courts paragraphes, ton professionnel mais accessible.
+Consignes STRICTES — respecte-les absolument :
+- Écris uniquement du texte brut, sans aucune mise en forme.
+- N'utilise JAMAIS de crochets, de numéros entre crochets comme [1] ou [2], ni aucune référence de citation. Aucun. Jamais.
+- N'utilise pas de puces, de tirets, de gras ou d'italique.
+- N'indique pas le nombre de mots ni aucun commentaire méta sur ta réponse.
+- Rédige en langage naturel, comme si tu parlais directement au client au téléphone.
+- Reste rassurant, factuel et concis. Deux courts paragraphes maximum.
+- Explique quels éléments ont déclenché l'alerte et pourquoi c'est une mesure de protection normale.
+- Vocabulaire courant uniquement : "supermarché", "magasin de shopping", "station-service". Jamais de termes techniques.
 """
+
     return prompt
 
 
