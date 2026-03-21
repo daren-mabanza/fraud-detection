@@ -2,6 +2,7 @@
 # Import des packages nécéssaires
 # ================================
 
+from config import ROOT
 import plotly.graph_objects as go
 import numpy as np
 

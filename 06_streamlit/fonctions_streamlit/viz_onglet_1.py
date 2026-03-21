@@ -2,6 +2,7 @@
 # Import des packages nécéssaires
 # ================================
 
+from config import ROOT
 import streamlit as st
 import numpy as np
 import numpy as np

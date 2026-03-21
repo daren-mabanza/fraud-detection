@@ -2,8 +2,8 @@
 # Import des packages nécéssaires
 # ================================
 
+from config import ROOT
 import streamlit as st
-from pathlib import Path
 import joblib
 from fonctions_streamlit.viz_onglet_2 import plot_cost_threshold_curve
 
@@ -11,7 +11,6 @@ from fonctions_streamlit.viz_onglet_2 import plot_cost_threshold_curve
 # Paramétrage de l'environnement de travail
 # ==========================================
 
-ROOT = Path.cwd().parents[0]
 JOBLIB_DATA = ROOT / "01_data" / "03_joblib"
 
 # =========
@@ -38,13 +37,13 @@ def onglet_2():
 
 
     # Chargement des données de validation
-    cost_optimizer = joblib.load(JOBLIB_DATA / "cost_optimizer.joblib")
+    cost_optimizer_artifacts = joblib.load(JOBLIB_DATA / "cost_optimizer_artifacts.joblib")
 
     # Paramétrage des seuils et couts
-    seuils = cost_optimizer.seuils_
-    costs = cost_optimizer.costs_
-    best_t = cost_optimizer.get_best_threshold()
-    best_cost = cost_optimizer.get_best_cost()
+    seuils = cost_optimizer_artifacts["seuils"]
+    costs = cost_optimizer_artifacts["costs"]
+    best_t = cost_optimizer_artifacts["best_threshold"]
+    best_cost = cost_optimizer_artifacts["best_cost"]
 
     st.subheader("")
 

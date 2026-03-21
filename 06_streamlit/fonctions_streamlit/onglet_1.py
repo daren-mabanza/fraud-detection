@@ -2,16 +2,16 @@
 # Import des packages nécéssaires
 # ================================
 
+from config import ROOT
 import streamlit as st
-from pathlib import Path
 import joblib
 from fonctions_streamlit.viz_onglet_1 import afficher_metriques_binaires, afficher_matrice_confusion, afficher_courbe_pr_train_test, afficher_courbe_calibration_train_test
+
 
 # ==========================================
 # Paramétrage de l'environnement de travail
 # ==========================================
 
-ROOT = Path.cwd().parents[0]
 JOBLIB_DATA = ROOT / "01_data" / "03_joblib"
 
 # =========
@@ -39,9 +39,11 @@ def onglet_1():
 
     y_train = joblib.load(JOBLIB_DATA / "y_train.joblib")
     train_proba = joblib.load(JOBLIB_DATA / "train_proba.joblib")
-    y_test = joblib.load(JOBLIB_DATA / "y_test_for_shap.joblib")
+    y_test = joblib.load(JOBLIB_DATA / "y_test.joblib")
     test_proba = joblib.load(JOBLIB_DATA / "test_proba.joblib")
-    seuil_decision = 0.226
+    
+    cost_optimizer = joblib.load(JOBLIB_DATA / "cost_optimizer.joblib")
+    seuil_decision = cost_optimizer.get_best_threshold()
 
     st.subheader("")
 

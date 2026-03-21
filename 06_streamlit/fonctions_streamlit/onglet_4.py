@@ -2,10 +2,9 @@
 # Import des packages nécéssaires
 # ================================
 
+from config import ROOT
 import streamlit as st
 import pandas as pd
-import numpy as np
-from pathlib import Path
 import joblib
 import random
 from fonctions_streamlit.utilitaires import score_transaction, sample_from_tranche
@@ -14,7 +13,6 @@ from fonctions_streamlit.utilitaires import score_transaction, sample_from_tranc
 # Paramétrage de l'environnement de travail
 # ==========================================
 
-ROOT = Path.cwd().parents[0]
 JOBLIB_DATA = ROOT / "01_data" / "03_joblib"
 
 # =========
@@ -29,8 +27,8 @@ def onglet_4():
     etats_principaux = ["CA", "NY", "TX", "FL", "NJ"]
     
     # Liste complète des états hors ceux qui seront explicitement proprosés dans l'UI
-    x_test = joblib.load(JOBLIB_DATA / "x_test_for_shap.joblib")
-    autres_etats = list(x_test["etat_client"].value_counts().reset_index()["etat_client"])
+    modalites_etat_client = joblib.load(JOBLIB_DATA / "values_etat_client.joblib")
+    autres_etats = [etat for etat in modalites_etat_client if etat not in etats_principaux]
 
     # Mise en page : deux colonnes
     col_client, col_tx = st.columns(2, gap="medium")
@@ -80,7 +78,7 @@ def onglet_4():
 
         etat_ui = st.selectbox(
             "État du client",
-            etats_principaux + ["autre"],
+            etats_principaux + ["Autre"],
         )
 
         age_tranche = st.selectbox(
@@ -124,7 +122,7 @@ def onglet_4():
         age = int(round(sample_from_tranche(age_tranche, age_bounds)))
 
         # Gestion de "autre" : on choisit un état réel non déjà dans etats_principaux
-        if etat_ui == "autre":
+        if etat_ui == "Autre":
             etat_effectif = random.choice(autres_etats)
         else:
             etat_effectif = etat_ui

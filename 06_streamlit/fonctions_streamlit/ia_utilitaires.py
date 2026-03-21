@@ -1,10 +1,9 @@
 # ================================
 # Import des packages nécéssaires
 # ================================
-
+from config import ROOT
 import json
 import streamlit as st
-from pathlib import Path
 import numpy as np
 from perplexity import Perplexity
 from fonctions_streamlit.utilitaires import save_explanation_cache
@@ -13,7 +12,6 @@ from fonctions_streamlit.utilitaires import save_explanation_cache
 # Paramétrage de l'environnement de travail
 # ==========================================
 
-ROOT = Path.cwd().parents[0]
 JOBLIB_DATA = ROOT / "01_data" / "03_joblib"
 EXPLANATION_CACHE = {}
 EXPLANATION_CACHE_PATH = JOBLIB_DATA / "llm_explanations_cache.json"

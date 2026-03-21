@@ -2,8 +2,8 @@
 # Import des packages nécéssaires
 # ================================
 
+from config import ROOT
 import streamlit as st
-from pathlib import Path
 import numpy as np
 import joblib
 import matplotlib.pyplot as plt
@@ -16,7 +16,6 @@ from fonctions_streamlit.viz_onglet_3 import plot_local_shap_vertical
 # Paramétrage de l'environnement de travail
 # ==========================================
 
-ROOT = Path.cwd().parents[0]
 JOBLIB_DATA = ROOT / "01_data" / "03_joblib"
 
 # =========
@@ -24,7 +23,7 @@ JOBLIB_DATA = ROOT / "01_data" / "03_joblib"
 # =========
 
 def onglet_3():
-    shap_values_global = joblib.load(JOBLIB_DATA / "shap_values_model.joblib")
+    shap_values_global = joblib.load(JOBLIB_DATA / "shap_values_modele.joblib")
 
     st.header("Transactions et explications locales")
 

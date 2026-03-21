@@ -2,11 +2,11 @@
 # Import des packages nécéssaires
 # ================================
 
+from config import ROOT
 import json
 import hashlib
 import joblib
 import streamlit as st
-from pathlib import Path
 import pandas as pd
 from sklearn import set_config
 import numpy as np
@@ -15,7 +15,6 @@ import numpy as np
 # Paramétrage de l'environnement de travail
 # ==========================================
 
-ROOT = Path.cwd().parents[0]
 JOBLIB_DATA = ROOT / "01_data" / "03_joblib"
 MODEL_DATA = ROOT / "04_model"
 EXPLANATION_CACHE = {}
@@ -52,10 +51,8 @@ def load_sample_data():
     """
     Fonction permettant de charger l'échantillon de données qui sera utilisé dans l'onglet 3 (Prédictions et explications).
     """
-    data_1_sample = joblib.load(JOBLIB_DATA / "1_fraud_data_sample.joblib")
-    data_0_sample = joblib.load(JOBLIB_DATA / "0_fraud_data_sample.joblib")
-
-    sample_data = pd.concat([data_1_sample,data_0_sample], axis = 0).sample(10, random_state=123)
+    
+    sample_data = joblib.load(JOBLIB_DATA / "test_sample_onglet_3.joblib")
 
     return sample_data
 
@@ -110,5 +107,3 @@ try:
         EXPLANATION_CACHE = json.load(f) # Le cache n'est pas vide : je l'utilise
 except FileNotFoundError:
     EXPLANATION_CACHE = {}               # Si erreur alors cache vide 
-
-
