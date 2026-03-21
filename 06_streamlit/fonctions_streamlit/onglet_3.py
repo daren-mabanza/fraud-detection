@@ -29,7 +29,7 @@ def onglet_3():
 
     st.markdown(
         """
-        <div style="font-size:1.75rem;">
+        <div style="font-size:1.55rem;">
     Cet onglet permet d’explorer des <strong>transactions individuelles</strong> et de comprendre,
     pour chacune d’elles, <strong>pourquoi</strong> le modèle attribue un certain <strong>score de fraude</strong>.
     On combine ici une <strong>explication locale via SHAP</strong> et une <strong>reformulation métier</strong>
@@ -55,7 +55,7 @@ def onglet_3():
         
         st.markdown(
     """
-    <div style="font-size:1.3rem;">
+    <div style="font-size:1.15rem;">
     Sur l'ensemble des transactions, <strong>le montant</strong> ressort comme le facteur
     le plus influent sur le score de fraude, loin devant les autres
     variables. Les <strong>créneaux horaires</strong> (par exemple 22h–23h), certains
@@ -121,7 +121,7 @@ def onglet_3():
 
     st.markdown(
         """
-        <div style="font-size:1.25rem; line-height:1.4; color:#888888; margin-top:0.5rem;">
+        <div style="font-size:1.15rem; line-height:1.4; color:#888888; margin-top:0.5rem;">
         ⚠️ <strong>Lecture des contributions locales</strong><br>
         Les barres ci-dessus montrent l'impact de chaque variable sur le
         <em>score interne de risque</em> du modèle <strong>XGBoost</strong>, avant calibration

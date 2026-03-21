@@ -142,7 +142,7 @@ def onglet_2():
 
     st.markdown(
     """
-    <div style="font-size:1.25rem;">
+    <div style="font-size:1.1rem;">
     Le modèle détecte près de <strong>8 fraudes sur 10</strong> tout en ne mettant en alerte
     qu'environ <strong>0,51 % des transactions</strong>, ce qui reste compatible avec une
     exploitation opérationnelle. La <strong>précision à 51,3 %</strong> signifie qu'une alerte
