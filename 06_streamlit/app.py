@@ -27,7 +27,7 @@ def main():
         unsafe_allow_html=True,
     )
 
-    st.title("Prédiction de la fraude bancaire – Modèle XGBoost explicable")
+    st.title("Prédiction de la fraude bancaire - Modèle XGBoost explicable")
 
     # Titres des onglets
     tab1, tab2, tab3, tab4 = st.tabs([

@@ -43,7 +43,7 @@ def onglet_3():
     col_imp_left, col_imp_right = st.columns(2, gap="medium")
 
     with col_imp_left:
-        st.subheader("Importance moyenne des variables (SHAP – global)")
+        st.subheader("Importance moyenne des variables (SHAP - global)")
         plt.clf()
         plt.figure(figsize=(6, 4))
         shap.plots.bar(shap_values_global, max_display=8, show=False)
@@ -58,7 +58,7 @@ def onglet_3():
     <div style="font-size:1.15rem;">
     Sur l'ensemble des transactions, <strong>le montant</strong> ressort comme le facteur
     le plus influent sur le score de fraude, loin devant les autres
-    variables. Les <strong>créneaux horaires</strong> (par exemple 22h–23h), certains
+    variables. Les <strong>créneaux horaires</strong> (par exemple 22h-23h), certains
     <strong>types de magasins</strong> (transport, grande distribution) et l'<strong>if_score</strong>
     apportent également une contribution notable au risque moyen.
     <br><br>
@@ -106,7 +106,7 @@ def onglet_3():
     st.markdown("---")
 
     # ===== Explication locale (SHAP – waterfall) en pleine largeur =====
-    st.subheader("Explication locale (SHAP – waterfall)")
+    st.subheader("Explication locale (SHAP - waterfall)")
 
     shap_arr = np.array(shap_values)
     if shap_arr.ndim == 1:

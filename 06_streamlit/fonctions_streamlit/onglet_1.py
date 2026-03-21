@@ -27,10 +27,9 @@ def onglet_1():
     <div style="font-size:1.55rem;">
     Cet onglet rassemble les principaux éléments de pilotage du modèle de détection
     de fraude : <strong>métriques globales</strong>, <strong>matrice de confusion</strong>,
-    <strong>courbes Précision–Rappel</strong> et <strong>courbes de calibration</strong>.
-    L’objectif est de vérifier que le modèle discrimine correctement les transactions
-    frauduleuses, que le seuil de décision retenu reste cohérent avec les <strong>coûts métier</strong>,
-    et que les probabilités prédites constituent une base fiable pour la <strong>prise de décision opérationnelle</strong>.
+    <strong>courbes Précision-Rappel</strong> et <strong>courbes de calibration</strong>.
+    L’objectif est premierement de vérifier que le modèle discrimine correctement les transactions
+    frauduleuses et que les probabilités prédites constituent une base fiable pour la <strong>prise de décision opérationnelle</strong>.
     </div>
     """,
     unsafe_allow_html=True
@@ -61,7 +60,7 @@ def onglet_1():
         st.markdown(
             """
             <div style="font-size:1.1rem;">
-    Sur la période de test (oct.–déc. 2020), le modèle conserve un très
+    Sur la période de test (octobre - décembre 2020), le modèle conserve un très
     fort pouvoir discriminant (<strong>ROC‑AUC ≈ 99%</strong>) tout en maintenant un
     <strong>Brier score</strong> très faible, signe d’une bonne calibration des probabilités.
     Avec un <strong>recall</strong> autour de 79 % et une <strong>average precision</strong> d’environ 72%,
