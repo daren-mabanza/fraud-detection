@@ -47,7 +47,6 @@ def build_prompt_for_transaction(proba, input_dict, top_features):
         'type_magasin_misc_pos': 'magasin divers',
         'mont_transaction': 'montant du paiement',
         'heure_transaction': "heure de la transaction",
-        'distance_domicile_magasin': 'distance domicile-magasin',
         'if_score': 'anomalie transaction',
         'etat_client': 'état géographique client',
         'age_client': 'âge du client'
@@ -79,7 +78,6 @@ TRANSACTION :
 - Montant : {input_dict.get('montant_transaction', 'N/A')} €
 - Type de magasin : {input_dict.get('type_magasin', 'N/A')}
 - Heure : {input_dict.get('heure_transaction', 'N/A')} h
-- Distance domicile–magasin : {input_dict.get('distance_domicile_magasin', 'N/A'):.1f} km
 
 FACTEURS PRINCIPAUX (issus de l’analyse automatique) :
 {top_str}
