@@ -116,7 +116,7 @@ def call_llm_explanation(tx_key, proba, shap_values, input_dict, feature_names, 
                     "role": "system",
                     "content": (
                         "Tu es un analyste fraude bancaire. "
-                        "Réponses courtes (175-200 mots), rassurantes, "
+                        "Réponses courtes (200-235 mots), rassurantes, "
                         "professionnelles. Jamais de jargon technique "
                         "(SHAP, XGBoost, calibration, API). "
                         "Toujours lier caractéristiques transaction + décision + facteurs risque."
