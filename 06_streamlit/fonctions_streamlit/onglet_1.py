@@ -24,7 +24,7 @@ def onglet_1():
 
     st.markdown(
     """
-    <div style="font-size:1.75rem;">
+    <div style="font-size:1.55rem;">
     Cet onglet rassemble les principaux éléments de pilotage du modèle de détection
     de fraude : <strong>métriques globales</strong>, <strong>matrice de confusion</strong>,
     <strong>courbes Précision–Rappel</strong> et <strong>courbes de calibration</strong>.
@@ -60,7 +60,7 @@ def onglet_1():
 
         st.markdown(
             """
-            <div style="font-size:1.25rem;">
+            <div style="font-size:1.1rem;">
     Sur la période de test (oct.–déc. 2020), le modèle conserve un très
     fort pouvoir discriminant (<strong>ROC‑AUC ≈ 99%</strong>) tout en maintenant un
     <strong>Brier score</strong> très faible, signe d’une bonne calibration des probabilités.
@@ -85,7 +85,7 @@ def onglet_1():
 
         st.markdown(
             """
-            <div style="font-size:1.25rem;">
+            <div style="font-size:1.1rem;">
     Sur l’échantillon test, le modèle détecte la majorité des fraudes
     (<strong>735 TP pour 201 FN</strong>), tout en limitant fortement les blocages à tort
     au regard du volume total de transactions (<strong>740 FP pour plus de 279 000 légitimes</strong>).
@@ -115,7 +115,7 @@ def onglet_1():
 
         st.markdown(
             """
-            <div style="font-size:1.25rem;">
+            <div style="font-size:1.1rem;">
     La courbe <strong>Précision–Rappel</strong> montre qu’il existe un large éventail
     de seuils pour lesquels le modèle conserve un <strong>rappel élevé</strong>, au
     prix d’une <strong>précision</strong> plus modérée. Le seuil de <strong>22,6%</strong> retenu sur
@@ -142,7 +142,7 @@ def onglet_1():
 
         st.markdown(
             """
-            <div style="font-size:1.25rem;">
+            <div style="font-size:1.1rem;">
     Les courbes de <strong>calibration</strong> et les <strong>Brier scores</strong> très faibles
     indiquent que les probabilités prédites restent globalement
     cohérentes entre <strong>train, validation et test</strong>. La légère tendance à

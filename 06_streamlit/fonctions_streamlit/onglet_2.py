@@ -22,7 +22,7 @@ def onglet_2():
     
     st.markdown(
         """
-        <div style="font-size:1.75rem;">
+        <div style="font-size:1.55rem;">
     Cet onglet permet d’analyser le modèle sous un angle <strong>métier</strong> plutôt que purement
     statistique. La <strong>courbe de coût total</strong> montre comment le choix du seuil de décision
     impacte directement les euros dépensés : d’un côté les <strong>faux positifs</strong>
@@ -59,7 +59,7 @@ def onglet_2():
     # Court texte d’interprétation
     st.markdown(
     f"""
-    <div style="font-size:1.25rem;">
+    <div style="font-size:1.1rem;">
     Le <strong>point rouge</strong> correspond au <strong>seuil de décision</strong> retenu sur l'échantillon de validation
     (≈ {best_t:.3f}), pour lequel le <strong>coût total estimé</strong> est minimal (≈ {best_cost:,.0f} €).
     La courbe montre comment un <strong>seuil plus bas</strong> augmente rapidement les <strong>faux positifs</strong>
