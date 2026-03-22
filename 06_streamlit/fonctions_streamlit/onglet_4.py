@@ -25,15 +25,14 @@ def onglet_4():
     
     st.markdown(
     """
-    **Avertissement**
+⚠️ **Avertissement**
 
-    Le modèle a été entraîné sur des **transactions simulées**.  
-    La probabilité affichée dans cet onglet indique donc comment la transaction créée se positionne par rapport aux **schémas appris dans ces données générées**, et non par rapport à l’ensemble des situations réelles possibles.
+Le modèle a été entraîné sur des **transactions simulées**.  
+La probabilité affichée dans cet onglet indique donc comment la transaction créée se positionne par rapport aux **schémas appris dans ces données générées**, et non par rapport à l’ensemble des situations réelles possibles.
+Une transaction pouvant paraître très étrange dans la réalité ne sera donc pas forcément classée comme très risquée ici, si ce type de cas n’est pas correctement représenté dans les données simulées d’entraînement.
 
-    Une transaction pouvant paraître très étrange dans la réalité ne sera donc pas forcément classée comme très risquée ici, si ce type de cas n’est pas correctement représenté dans les données simulées d’entraînement.
-
-    Ce score doit être lu comme une **illustration du fonctionnement du modèle dans un cadre simulé**.
-    """
+Ce score doit être lu comme une **illustration du fonctionnement du modèle dans un cadre simulé**.
+"""
     )
 
     # États qu'on propose explicitement dans l'UI
