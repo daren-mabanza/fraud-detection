@@ -25,7 +25,6 @@ def onglet_4():
     
     st.markdown(
     """
-    <div style="font-size:1.15rem;">
     ℹ️ **Avertissement**
 
     Le modèle a été entraîné sur des **transactions simulées**.  
@@ -34,7 +33,6 @@ def onglet_4():
     Une transaction pouvant paraître très étrange dans la réalité ne sera donc pas forcément classée comme très risquée ici, si ce type de cas n’est pas correctement représenté dans les données simulées d’entraînement.
 
     Ce score doit être lu comme une **illustration du fonctionnement du modèle dans un cadre simulé**.
-    </div>
     """
     )
 
