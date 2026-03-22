@@ -59,30 +59,47 @@ def build_prompt_for_transaction(proba, input_dict, top_features):
         real_value = input_dict.get(clean_name, "non disponible")
 
         if clean_name == "if_score":
-            anomalie_niveau = (
-                "très anormale" if real_value < -0.1
-                else "légèrement atypique" if real_value < 0
-                else "normale"
-            )
-            description = (
-                f"{label} = {real_value} ({anomalie_niveau}). "
-                f"Ce score mesure à quel point la transaction est rare parmi l'ensemble des transactions observées. "
-                f"Un score négatif indique un comportement inhabituel à l'échelle globale."
-            )
+            try:
+                real_value_num = float(real_value)
+                anomalie_niveau = (
+                    "très anormale" if real_value_num < -0.1
+                    else "légèrement atypique" if real_value_num < 0
+                    else "normale"
+                )
+                description = (
+                    f"{label} = {real_value_num:.3f} ({anomalie_niveau}). "
+                    f"Ce score mesure à quel point la transaction est rare parmi l'ensemble des transactions observées. "
+                    f"Un score négatif indique un comportement inhabituel à l'échelle globale."
+                )
+            except (TypeError, ValueError):
+                description = (
+                    f"{label} = non disponible. "
+                    f"Cet indicateur mesure à quel point la transaction est inhabituelle parmi l'ensemble des transactions observées."
+                )
+
         elif clean_name == "heure_transaction":
             description = f"{label} = {real_value}h"
+
         elif clean_name == "montant_transaction":
             description = f"{label} = {real_value} €"
+
         elif clean_name == "age_client":
             description = f"{label} = {real_value} ans"
+
         elif clean_name == "etat_client":
             description = f"{label} = {real_value}"
+
         else:
             description = f"{label} = {real_value}"
 
-        poids = abs(float(shap_value))
+        try:
+            poids = abs(float(shap_value))
+            shap_value_num = float(shap_value)
+        except (TypeError, ValueError):
+            poids = 0.0
+            shap_value_num = 0.0
 
-        if float(shap_value) > 0:
+        if shap_value_num > 0:
             facteurs_risque.append(f"{description} (impact {poids:.3f})")
         else:
             facteurs_rassurants.append(f"{description} (impact {poids:.3f})")
