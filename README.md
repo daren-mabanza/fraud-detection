@@ -176,11 +176,11 @@ La combinaison calibration + optimisation du seuil permet ainsi de transformer u
 Le modèle présente des performances élevées, à la fois en termes de métriques ML et d’impact métier :
 
 - ROC-AUC ≈ **0,99**  
-- Recall ≈ **78,5 %** (≈ 8 fraudes sur 10 détectées)  
-- Précision ≈ **51 %** (≈ 1 alerte sur 2 pertinente)  
+- Recall ≈ **78,6 %** (≈ 8 fraudes sur 10 détectées)  
+- Précision ≈ **50 %** (≈ 1 alerte sur 2 pertinente)  
 - Alert rate ≈ **0,51 %** des transactions  
 
-Le **seuil optimal (0,226)** est déterminé sur l’échantillon de validation en minimisant le coût.
+Le **seuil optimal (0,191)** est déterminé sur l’échantillon de validation en minimisant le coût.
 
 ### Optimisation du seuil de décision
 
@@ -199,9 +199,9 @@ Ce graphique illustre l’évolution du coût en fonction du seuil de décision 
 - un seuil trop élevé laisse passer des fraudes, ce qui augmente également le coût  
 - un minimum apparaît pour un seuil intermédiaire  
 
-Le seuil optimal correspond au point minimisant ce coût, ici autour de **0,226**.
+Le seuil optimal correspond au point minimisant ce coût, ici autour de **0,191**.
 
-Appliqué au jeu de test, il conduit à un **coût total d’environ 134 675 €**, traduisant un compromis efficace entre faux positifs et faux négatifs.
+Appliqué au jeu de test, il conduit à un **coût total d’environ 134 225 €**, traduisant un compromis efficace entre faux positifs et faux négatifs.
 
 Ces résultats montrent que le modèle :
 

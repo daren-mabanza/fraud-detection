@@ -256,7 +256,8 @@ def xgboost_model():
 
 
     # Sauvegarde des objets JOBLIB
-    full_test = pd.concat([x_test,y_test], axis = 1)
+        # ===============
+    full_test = pd.concat([x_test,y_test,pd.DataFrame(test_proba, columns=["proba"])], axis = 1)
 
     full_test_sample = stratified_sample(
         df=full_test,
@@ -265,8 +266,21 @@ def xgboost_model():
         random_state=123
     )
 
-    x_test_sample = full_test_sample.drop(["target"], axis = 1)
-    
+    x_test_sample = full_test_sample.drop(["target","proba"], axis = 1)
+        # ===============
+    full_test_sample_1 = full_test[(full_test["proba"].between(0,0.009))&(full_test["target"]==0)].sample(3).drop(["proba"], axis=1)
+    full_test_sample_2 = full_test[(full_test["proba"].between(0.1,0.18))&(full_test["target"]==0)].sample(2).drop(["proba"], axis=1)
+    full_test_sample_3 = full_test[(full_test["proba"].between(0.2,0.3))&(full_test["target"]==1)].sample(2).drop(["proba"], axis=1)
+    full_test_sample_4 = full_test[(full_test["proba"].between(0.5,0.75))&(full_test["target"]==1)].sample(2).drop(["proba"], axis=1)
+    full_test_sample_5 = full_test[(full_test["proba"].between(0.75,1))&(full_test["target"]==1)].sample(1).drop(["proba"], axis=1)
+
+
+    full_test_sample_onglet_3 = pd.concat([full_test_sample_1,
+                                        full_test_sample_2,
+                                        full_test_sample_3,
+                                        full_test_sample_4,
+                                        full_test_sample_5], axis = 0).sample(10)
+        # ===============
     
         # Modèles 
     joblib.dump(modele, MODEL_DATA / "fraud_detection_xgb_pas_calibre.joblib")  
@@ -293,11 +307,8 @@ def xgboost_model():
     joblib.dump(list(values_etats_client), JOBLIB_DATA / "values_etat_client.joblib")
 
         # Echantillons de données pour l'onglet 3 de l'application Streamlit
-    fraud_1 = full_test[full_test["target"]==1].sample(5)
-    fraud_0 = full_test[full_test["target"]==0].sample(5)
-
-    test_sample_onglet_3 = pd.concat([fraud_0,fraud_1], axis=0).sample(10)
-    joblib.dump(test_sample_onglet_3, JOBLIB_DATA / "test_sample_onglet_3.joblib")
+    joblib.dump(full_test_sample_onglet_3, JOBLIB_DATA / "full_test_sample_onglet_3.joblib")
+    joblib.dump(full_test_sample.drop(["proba"], axis=1), JOBLIB_DATA / "full_test_sample.joblib")
     
         # Echantillon de données "x_test_sample"
     joblib.dump(x_test_sample, JOBLIB_DATA / "x_test_sample.joblib")
