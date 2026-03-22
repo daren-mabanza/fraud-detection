@@ -128,6 +128,26 @@ DÉCISION :
 Paiement {decision}.
 {contexte_decision}
 
+INTERPRÉTATION DES VARIABLES (TRADUCTION MÉTIER) :
+
+Voici la correspondance entre les variables techniques et leur signification :
+
+{feature_mapping}
+
+IMPORTANT :
+- Tu dois utiliser UNIQUEMENT ces traductions pour parler des variables.
+- Tu ne dois JAMAIS utiliser les noms techniques (ex: type_magasin_grocery_pos).
+- Tu dois reformuler naturellement pour un client.
+
+Exemple :
+- "montant de la transaction" → parler du montant payé
+- "heure de la transaction" → parler du moment du paiement
+- "type de commerce" → parler du type d'achat
+- "indice d'anomalie" → expliquer si la transaction est inhabituelle
+
+OBJECTIF :
+Expliquer la situation de manière simple, claire et naturelle, sans jargon technique.
+
 INTERPRÉTATION DES FACTEURS :
 
 Les éléments suivants expliquent la décision.
