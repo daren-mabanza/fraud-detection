@@ -25,7 +25,7 @@ def onglet_4():
     
     st.markdown(
     """
-    ⚠️ **Avertissement**
+    **Avertissement**
 
     Le modèle a été entraîné sur des **transactions simulées**.  
     La probabilité affichée dans cet onglet indique donc comment la transaction créée se positionne par rapport aux **schémas appris dans ces données générées**, et non par rapport à l’ensemble des situations réelles possibles.
