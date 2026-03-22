@@ -4,7 +4,8 @@
 from config import ROOT
 import streamlit as st
 import numpy as np
-from openai import OpenAI                                          
+from openai import OpenAI  
+import joblib                                        
 
 # ==========================================
 # Paramétrage de l'environnement de travail
@@ -29,7 +30,11 @@ def get_llm_client():
     )
 
 def build_prompt_for_transaction(proba, input_dict, top_features):
-    decision = "bloquée" if proba >= 0.226 else "acceptée"
+    
+    cost_optimizer = joblib.load(JOBLIB_DATA / "cost_optimizer.joblib")
+    seuil = cost_optimizer.get_best_threshold()
+    
+    decision = "bloquée" if proba >= seuil else "acceptée"
     proba_pct = f"{proba:.0%}"
 
     feature_mapping = {
@@ -60,48 +65,62 @@ def build_prompt_for_transaction(proba, input_dict, top_features):
                 else "normale"
             )
             description = (
-                f"{label} = {real_value} ({anomalie_niveau}) : "
-                f"ce score mesure à quel point cette transaction ressemble à des transactions rares "
-                f"dans l'ensemble de notre base de données, tous clients confondus. "
-                f"Un score négatif signifie que la transaction est statistiquement inhabituelle "
-                f"par rapport aux millions de transactions traitées globalement. "
-                f"Ce score ne tient PAS compte de l'historique personnel de ce client : "
-                f"même si ce client effectue régulièrement ce type d'achat, "
-                f"un score négatif reste un signal d'alerte au niveau population."
+                f"{label} = {real_value} ({anomalie_niveau}). "
+                f"Ce score mesure à quel point la transaction est rare parmi l'ensemble des transactions observées. "
+                f"Un score négatif indique un comportement inhabituel à l'échelle globale."
             )
         elif clean_name == 'heure_transaction':
-            description = f"{label} = {real_value}h (heure à laquelle le paiement a été effectué)"
+            description = f"{label} = {real_value}h"
         elif clean_name == 'mont_transaction':
-            description = f"{label} = {real_value} € (montant exact payé)"
+            description = f"{label} = {real_value} €"
         elif clean_name == 'age_client':
             description = f"{label} = {real_value} ans"
         elif clean_name == 'etat_client':
-            description = f"{label} = {real_value} (localisation géographique déclarée du client)"
+            description = f"{label} = {real_value}"
         else:
             description = f"{label} = {real_value}"
 
-        if shap_value > 0:
-            facteurs_risque.append(f"  - {description} → a AUGMENTÉ le risque de fraude")
-        else:
-            facteurs_rassurants.append(f"  - {description} → a RÉDUIT le risque de fraude")
+        poids = abs(shap_value)
 
-    bloc_risque = "\n".join(facteurs_risque) if facteurs_risque else "  - aucun facteur de risque majeur"
-    bloc_rassurant = "\n".join(facteurs_rassurants) if facteurs_rassurants else "  - aucun facteur rassurant détecté"
+        if shap_value > 0:
+            facteurs_risque.append(f"{description} (impact {poids:.3f})")
+        else:
+            facteurs_rassurants.append(f"{description} (impact {poids:.3f})")
+
+    bloc_risque = "\n".join(facteurs_risque) if facteurs_risque else "aucun facteur majeur"
+    bloc_rassurant = "\n".join(facteurs_rassurants) if facteurs_rassurants else "aucun facteur notable"
 
     contexte_decision = (
-        f"Le système a calculé un score de risque de fraude de {proba_pct}. "
-        f"Le seuil de blocage est fixé à 23%. "
-        f"{'Ce score dépasse le seuil, donc la transaction a été bloquée.' if proba >= 0.226 else 'Ce score est sous le seuil, donc la transaction a été acceptée.'}"
+        f"La probabilité estimée est de {proba_pct}. "
+        f"Le seuil de blocage est fixé à 19%. "
+        f"{'La transaction dépasse ce seuil et a donc été bloquée.' if proba >= seuil else 'La transaction reste sous ce seuil et a donc été acceptée.'}"
     )
 
     prompt = f"""
-CONTEXTE :
-Un client appelle sa banque au sujet d'un paiement de {input_dict.get('montant_transaction', 'N/A')} €
-effectué à {input_dict.get('heure_transaction', 'N/A')}h dans un commerce de type "{input_dict.get('type_magasin', 'N/A')}".
-Le client a {input_dict.get('age_client', 'N/A')} ans et est localisé dans l'état : {input_dict.get('etat_client', 'N/A')}.
+CONTEXTE MÉTIER :
+Un client contacte sa banque suite à une transaction.
 
-DÉCISION DU SYSTÈME : paiement {decision}.
+Transaction :
+- Montant : {input_dict.get('mont_transaction', 'N/A')} €
+- Heure : {input_dict.get('heure_transaction', 'N/A')}h
+- Type de commerce : {input_dict.get('type_magasin', 'N/A')}
+- Âge du client : {input_dict.get('age_client', 'N/A')} ans
+- Localisation : {input_dict.get('etat_client', 'N/A')}
+
+DÉCISION :
+Paiement {decision}.
 {contexte_decision}
+
+----------------------------------------
+INTERPRÉTATION DES FACTEURS :
+----------------------------------------
+
+Les éléments suivants expliquent la décision.
+
+IMPORTANT :
+- Les facteurs sont classés par importance.
+- Plus l’impact est élevé, plus le facteur a pesé dans la décision.
+- Tu dois expliquer la décision UNIQUEMENT à partir de ces éléments.
 
 FACTEURS QUI ONT AUGMENTÉ LE RISQUE :
 {bloc_risque}
@@ -109,25 +128,54 @@ FACTEURS QUI ONT AUGMENTÉ LE RISQUE :
 FACTEURS QUI ONT RÉDUIT LE RISQUE :
 {bloc_rassurant}
 
-NOTE SUR L'INDICE D'ANOMALIE :
-Un indice négatif signifie que la transaction est rare dans notre base globale, tous clients confondus.
-Ce n'est pas "ce client n'a pas l'habitude" mais "ce type de transaction est statistiquement peu fréquent
-parmi l'ensemble de nos clients". Ne confonds jamais les deux dans ton explication.
+----------------------------------------
+INTERPRÉTATION DE L'INDICE D'ANOMALIE :
+----------------------------------------
 
+L'indice d'anomalie (if_score) mesure à quel point cette transaction est inhabituelle
+par rapport à l'ensemble des transactions observées.
+
+- Une valeur négative signifie que la transaction est rare à l'échelle globale.
+- Une valeur proche de zéro signifie qu'elle est normale.
+
+ATTENTION :
+Ce score ne regarde PAS l'historique du client.
+Ce n'est pas "inhabituel pour ce client", mais "inhabituel parmi tous les clients".
+
+----------------------------------------
+CADRE D’INTERPRÉTATION :
+----------------------------------------
+
+- Un facteur qui augmente le risque rapproche la transaction de comportements déjà associés à de la fraude.
+- Un facteur qui réduit le risque rapproche la transaction de comportements habituels.
+- Il s'agit d'une comparaison statistique, pas d'une vérité absolue.
+
+----------------------------------------
 TA MISSION :
-Rédige 2 à 3 phrases en texte brut pour expliquer concrètement cette décision au client.
-Commence par ce qui a le plus pesé dans la décision (facteurs de risque si bloqué, facteurs rassurants si accepté).
-Sois précis : cite les valeurs réelles (montant exact, heure exacte, type de commerce).
-Conclus par la décision finale et ce qu'elle signifie pour le client.
+----------------------------------------
 
-RÈGLES NON NÉGOCIABLES :
-- Texte brut uniquement : zéro crochet, zéro [1], zéro [2], zéro puce, zéro tiret, zéro gras.
-- Tu n'es pas un moteur de recherche, tu ne cites aucune source. Aucun numéro de référence.
-- Zéro jargon : jamais de "SHAP", "XGBoost", "Isolation Forest", "score", "modèle", "algorithme", "seuil".
-- Zéro introduction, zéro formule de politesse, zéro "Bonjour", zéro "Je suis ravi".
-- Langage naturel, direct, comme un conseiller bancaire expérimenté au téléphone.
-- Termine toujours ta dernière phrase avec un point.
+Explique la décision au client en 3-4 phrases maximum.
+
+- Commence par les éléments les plus déterminants.
+- Si la transaction est bloquée → commence par les facteurs de risque.
+- Si elle est acceptée → commence par les éléments rassurants.
+- Cite toujours des éléments concrets (montant, heure, type de commerce…).
+- Fais un lien clair entre ces éléments et la décision.
+
+----------------------------------------
+RÈGLES STRICTES :
+----------------------------------------
+
+- Texte brut uniquement.
+- Aucun symbole, aucune liste, aucun tiret.
+- Aucun jargon technique.
+- Interdiction des mots : modèle, algorithme, score, seuil, SHAP.
+- Aucune invention : uniquement les facteurs fournis.
+- Style naturel, comme un conseiller bancaire expérimenté.
+- Maximum 4 phrases.
+- Toujours terminer par un point.
 """
+
     return prompt
 
 

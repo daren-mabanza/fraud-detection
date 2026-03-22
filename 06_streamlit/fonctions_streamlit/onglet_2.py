@@ -112,15 +112,15 @@ def onglet_2():
         </tr>
         <tr>
             <td class="business-metrics-name">Fraud Capture Rate</td>
-            <td>78,5 %</td>
+            <td>78,6 %</td>
         </tr>
         <tr>
             <td class="business-metrics-name">Fraud Loss Rate</td>
-            <td>22,6 %</td>
+            <td>22,4 %</td>
         </tr>
         <tr>
             <td class="business-metrics-name">Précision</td>
-            <td>51 % (≈ 1 alerte sur 2)</td>
+            <td>50 % (≈ 1 alerte sur 2)</td>
         </tr>
         <tr>
             <td class="business-metrics-name">Alert Rate</td>
