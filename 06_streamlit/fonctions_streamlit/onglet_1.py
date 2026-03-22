@@ -86,8 +86,8 @@ def onglet_1():
             """
             <div style="font-size:1.1rem;">
     Sur l’échantillon test, le modèle détecte la majorité des fraudes
-    (<strong>735 TP pour 201 FN</strong>), tout en limitant fortement les blocages à tort
-    au regard du volume total de transactions (<strong>740 FP pour plus de 279 000 légitimes</strong>).
+    (<strong>736 TP pour 200 FN</strong>), tout en limitant fortement les blocages à tort
+    au regard du volume total de transactions (<strong>746 FP pour plus de 279 000 légitimes</strong>).
     Le <strong>ratio</strong> d’environ 1 faux positif pour 1 vrai positif est acceptable dans le
     cadre de la structure de coûts retenue, où une <strong>fraude non détectée</strong> est jugée
     cinq fois plus coûteuse qu’une alerte injustifiée.
@@ -117,7 +117,7 @@ def onglet_1():
             <div style="font-size:1.1rem;">
     La courbe <strong>Précision–Rappel</strong> montre qu’il existe un large éventail
     de seuils pour lesquels le modèle conserve un <strong>rappel élevé</strong>, au
-    prix d’une <strong>précision</strong> plus modérée. Le seuil de <strong>22,6%</strong> retenu sur
+    prix d’une <strong>précision</strong> plus modérée. Le seuil de <strong>19,1%</strong> retenu sur
     l’échantillon de validation privilégie volontairement la captation
     de fraudes (<strong>recall ≈ 79 %</strong>) au détriment d’une précision parfaite,
     conformément à la hiérarchie des coûts où les <strong>fraudes non détectées</strong>

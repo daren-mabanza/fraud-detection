@@ -37,14 +37,14 @@ def onglet_2():
 
 
     # Chargement des données de validation
-    cost_optimizer_artifacts = joblib.load(JOBLIB_DATA / "cost_optimizer_artifacts.joblib")
+    cost_optimizer = joblib.load(JOBLIB_DATA / "cost_optimizer.joblib")
 
     # Paramétrage des seuils et couts
-    seuils = cost_optimizer_artifacts["seuils"]
-    costs = cost_optimizer_artifacts["costs"]
-    best_t = cost_optimizer_artifacts["best_threshold"]
-    best_cost = cost_optimizer_artifacts["best_cost"]
-
+    seuils = cost_optimizer.seuils_
+    costs = cost_optimizer.costs_
+    best_t = cost_optimizer.get_best_threshold()
+    best_cost = cost_optimizer.get_best_cost()
+    
     st.subheader("")
 
     # Graphique Plotly interactif
@@ -145,7 +145,7 @@ def onglet_2():
     <div style="font-size:1.1rem;">
     Le modèle détecte près de <strong>8 fraudes sur 10</strong> tout en ne mettant en alerte
     qu'environ <strong>0,51 % des transactions</strong>, ce qui reste compatible avec une
-    exploitation opérationnelle. La <strong>précision à 51,3 %</strong> signifie qu'une alerte
+    exploitation opérationnelle. La <strong>précision à 49,6 %</strong> signifie qu'une alerte
     sur deux correspond effectivement à une fraude, un niveau acceptable
     compte tenu de la rareté du phénomène et de la hiérarchie des coûts.
     Le <strong>ratio FP/TP ≈ 1</strong> traduit un équilibre raisonnable entre <strong>pertes évitées</strong>

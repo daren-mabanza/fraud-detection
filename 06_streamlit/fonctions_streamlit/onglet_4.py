@@ -22,6 +22,19 @@ JOBLIB_DATA = ROOT / "01_data" / "03_joblib"
 
 def onglet_4():
     st.header("Votre transaction serait-elle considérée comme frauduleuse ?")
+    
+    st.info(
+    """
+    ℹ️ **Avertissement**
+
+    Le modèle a été entraîné sur des **transactions simulées**.  
+    La probabilité affichée dans cet onglet indique donc comment la transaction créée se positionne par rapport aux **schémas appris dans ces données générées**, et non par rapport à l’ensemble des situations réelles possibles.
+
+    Une transaction pouvant paraître très étrange dans la réalité ne sera donc pas forcément classée comme très risquée ici, si ce type de cas n’est pas correctement représenté dans les données simulées d’entraînement.
+
+    Ce score doit être lu comme une **illustration du fonctionnement du modèle dans un cadre simulé**.
+    """
+    )
 
     # États qu'on propose explicitement dans l'UI
     etats_principaux = ["CA", "NY", "TX", "FL", "NJ"]
@@ -139,7 +152,9 @@ def onglet_4():
         # 1. Scoring
         proba, shap_values, X_proc = score_transaction(input_dict)
 
-        seuil = 0.226
+        cost_optimizer = joblib.load(JOBLIB_DATA / "cost_optimizer.joblib")
+        seuil = cost_optimizer.get_best_threshold() 
+        
         decision = "ALERTE FRAUDE" if proba >= seuil else "ACCEPTÉE"
 
         # Bandeau couleur en haut
@@ -177,7 +192,7 @@ def onglet_4():
             )
         with col_decision:
             st.metric(
-                label="Décision (seuil 0,226)",
+                label="Décision (seuil 0,191)",
                 value=decision,
             )
 
