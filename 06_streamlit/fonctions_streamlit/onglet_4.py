@@ -214,4 +214,4 @@ def onglet_4():
         Ce score doit être lu comme une **illustration du fonctionnement du modèle dans un cadre simulé**.
         </div>
         """
-        )
+        , unsafe_allow_html=True)

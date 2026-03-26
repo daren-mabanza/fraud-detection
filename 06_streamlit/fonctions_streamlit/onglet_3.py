@@ -29,7 +29,7 @@ def onglet_3():
 
     st.markdown(
         """
-        <div style="font-size:1.55rem;">
+        <div style="font-size:1.55rem;  margin-bottom:20px;">
     Cet onglet permet d’explorer des <strong>transactions individuelles</strong> et de comprendre,
     pour chacune d’elles, <strong>pourquoi</strong> le modèle attribue un certain <strong>score de fraude</strong>.
     On combine ici une <strong>explication locale via SHAP</strong> et une <strong>reformulation métier de la transaction</strong>
@@ -83,11 +83,9 @@ def onglet_3():
     st.subheader("Sélectionnez une transaction pour voir l’explication détaillée :")
     
     st.markdown("""
-        <div style="font-size:1.1rem;">
+         <div style="font-size:1.1rem; margin-bottom:20px;">
         Cet outil permet d’examiner une transaction individuelle et de comprendre pourquoi elle est considérée comme <strong>frauduleuse ou légitime</strong>.  
         En sélectionnant une ligne, vous pouvez consulter la <strong>probabilité de fraude</strong> estimée ainsi qu’une <strong>analyse détaillée</strong> des principaux facteurs ayant influencé la décision, afin de rendre le modèle <strong>compréhensible et exploitable</strong> par les équipes métier.
-        
-        
         </div>
         """, unsafe_allow_html=True)
     
