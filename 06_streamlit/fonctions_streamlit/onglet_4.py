@@ -33,17 +33,17 @@ def onglet_4():
 )
     
     st.markdown(
-"""<div style="font-size:0.9rem; line-height:1.5; margin-bottom:20px;">
-<strong>⚠️ Avertissement</strong><br>
-Le modèle a été entraîné sur des <strong>transactions simulées</strong>.
-La probabilité affichée dans cet onglet indique donc comment la transaction créée se positionne par rapport aux 
-<strong>schémas appris dans ces données générées</strong>, et non par rapport à l’ensemble des situations réelles possibles.
-Une transaction pouvant paraître très étrange dans la réalité ne sera donc pas forcément classée comme très risquée ici, 
-si ce type de cas n’est pas correctement représenté dans les données simulées d’entraînement.
-Ce score doit être lu comme une <strong>illustration du fonctionnement du modèle dans un cadre simulé</strong>.
-</div>""",
-unsafe_allow_html=True
-)
+    """<div style="font-size:0.8rem; line-height:1.5; margin-bottom:20px; color:#888888;">
+    <strong>⚠️ Avertissement</strong><br>
+    Le modèle a été entraîné sur des <strong>transactions simulées</strong>.
+    La probabilité affichée dans cet onglet indique donc comment la transaction créée se positionne par rapport aux 
+    <strong>schémas appris dans ces données générées</strong>, et non par rapport à l’ensemble des situations réelles possibles.
+    Une transaction pouvant paraître très étrange dans la réalité ne sera donc pas forcément classée comme très risquée ici, 
+    si ce type de cas n’est pas correctement représenté dans les données simulées d’entraînement.
+    Ce score doit être lu comme une <strong>illustration du fonctionnement du modèle dans un cadre simulé</strong>.
+    </div>""",
+    unsafe_allow_html=True
+    )
 
     # États qu'on propose explicitement dans l'UI
     etats_principaux = ["CA", "NY", "TX", "FL", "NJ"]
