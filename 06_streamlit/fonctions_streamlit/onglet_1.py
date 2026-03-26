@@ -114,7 +114,7 @@ def onglet_1():
 
         st.markdown(
             """
-            <div style="font-size:1.1rem;">
+            <div style="font-size:0.9rem;">
             La courbe <strong>ROC</strong> montre que le modèle conserve une excellente capacité
             à <strong>distinguer</strong> les transactions frauduleuses des transactions légitimes,
             quel que soit le seuil retenu. La proximité entre les courbes train et test,
@@ -139,7 +139,7 @@ def onglet_1():
 
         st.markdown(
             """
-            <div style="font-size:1.1rem;">
+            <div style="font-size:0.9rem;">
             La courbe <strong>Précision-Rappel</strong> met en évidence le compromis entre
             <strong>détection des fraudes</strong> et <strong>volume d’alertes</strong>. Le seuil de <strong>19,1%</strong>
             retenu privilégie un <strong>rappel élevé</strong> (<strong>≈ 79 %</strong>), au prix d’une
@@ -168,7 +168,7 @@ def onglet_1():
 
         st.markdown(
             """
-            <div style="font-size:1.1rem;">
+            <div style="font-size:0.9rem;">
             Les courbes de <strong>calibration</strong> et les <strong>Brier scores</strong> très faibles
             indiquent que les probabilités prédites restent globalement
             cohérentes entre <strong>train, validation et test</strong>. Une légère tendance à
@@ -186,23 +186,10 @@ def onglet_1():
         
     st.markdown("""     
         <div style="font-size:1.15rem; line-height:1.6;">
-        En synthèse, les trois analyses apportent une lecture cohérente du comportement du modèle.
-
-        La <strong>courbe ROC</strong> met en évidence un <strong>fort pouvoir discriminant</strong>, stable entre train et test.  
-        La <strong>courbe Précision-Rappel</strong> illustre un compromis adapté au contexte métier, avec un <strong>rappel élevé</strong> privilégié au regard du coût des fraudes non détectées.  
-        Les <strong>courbes de calibration</strong> confirment que les probabilités produites restent <strong>cohérentes et exploitables</strong> comme une véritable échelle de risque.
-
-        <br>
-
-        Les écarts observés entre les périodes s’expliquent principalement par une <strong>baisse du taux de fraude</strong> (drift de prévalence), passant d’environ <strong>0,05 % à 0,03 %</strong>, ce qui impacte mécaniquement la précision et conduit à une <strong>légère surestimation du risque</strong> sur les données les plus récentes.
-
-        <br>
-
+        En synthèse, les trois analyses apportent une lecture cohérente du comportement du modèle. La <strong>courbe ROC</strong> met en évidence un <strong>fort pouvoir discriminant</strong>, stable entre train et test. La <strong>courbe Précision-Rappel</strong> illustre un compromis adapté au contexte métier, avec un <strong>rappel élevé</strong> privilégié au regard du coût des fraudes non détectées.  
+        Les <strong>courbes de calibration</strong> confirment que les probabilités produites restent <strong>cohérentes et exploitables</strong> comme une véritable échelle de risque. Les écarts observés entre les périodes s’expliquent principalement par une <strong>baisse du taux de fraude</strong> (drift de prévalence), passant d’environ <strong>0,05 % à 0,03 %</strong>, ce qui impacte mécaniquement la précision et conduit à une <strong>légère surestimation du risque</strong> sur les données les plus récentes.
         La <strong>stabilité des performances en AUC</strong> ainsi que des <strong>PSI faibles (voir Github)</strong> sur les probabilités et les variables indiquent que la structure des données reste globalement inchangée.  
         Le modèle conserve donc sa capacité à <strong>discriminer efficacement</strong> les transactions, sans signe de dégradation de sa robustesse.
-
-        <br>
-
         Dans ce contexte, le modèle apparaît <strong>stable, cohérent et exploitable</strong> dans un cadre opérationnel bancaire.  
         Un <strong>ajustement régulier du seuil de décision</strong> en fonction de l’évolution du taux de fraude reste toutefois nécessaire pour maintenir un compromis optimal entre <strong>détection</strong> et <strong>expérience client</strong>.
         </div>
