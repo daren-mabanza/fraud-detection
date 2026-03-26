@@ -32,7 +32,7 @@ def onglet_3():
         <div style="font-size:1.55rem;">
     Cet onglet permet d’explorer des <strong>transactions individuelles</strong> et de comprendre,
     pour chacune d’elles, <strong>pourquoi</strong> le modèle attribue un certain <strong>score de fraude</strong>.
-    On combine ici une <strong>explication locale via SHAP</strong> et une <strong>reformulation métier</strong>
+    On combine ici une <strong>explication locale via SHAP</strong> et une <strong>reformulation métier de la transaction</strong>
     générée par un <strong>LLM</strong>.
         </div>
         """,
@@ -79,6 +79,15 @@ def onglet_3():
     sample_data.insert(0, "id_ligne", sample_data.index + 1)  # 1 à 10
 
     st.subheader("Sélectionnez une transaction pour voir l’explication détaillée :")
+    
+    st.markdown("""
+        <div style="font-size:1.1rem;">
+        Cet outil permet d’examiner une transaction individuelle et de comprendre pourquoi elle est considérée comme <strong>frauduleuse ou légitime</strong>.  
+        En sélectionnant une ligne, vous pouvez voir la <strong>probabilité de fraude</strong> attribuée par le modèle ainsi une <strong>analyse détaillée</strong> du niveau de risque ainsi qu’aux principaux facteurs ayant influencé la décision, afin de rendre le modèle <strong>compréhensible et exploitable</strong> par les équipes métier.
+        </div>
+                """
+        )
+    
     st.dataframe(sample_data, hide_index=True, use_container_width=True, height = 350)
 
     # 2. Choix d'un id_ligne (1 à 10)
@@ -105,8 +114,16 @@ def onglet_3():
 
     st.markdown("---")
 
-    # ===== Explication locale (SHAP – waterfall) en pleine largeur =====
+    # ===== Explication locale (SHAP - waterfall) en pleine largeur =====
     st.subheader("Explication locale (SHAP - waterfall)")
+    
+    st.markdown(
+        """
+        <div style="font-size:1.1rem;">
+        Cette section explique <strong>comment chaque variable influence le niveau de risque</strong> pour cette transaction, en montrant ce qui pousse la décision vers une fraude ou vers un comportement légitime.
+        </div>
+        """
+    )
 
     shap_arr = np.array(shap_values)
     if shap_arr.ndim == 1:
@@ -121,7 +138,7 @@ def onglet_3():
 
     st.markdown(
         """
-        <div style="font-size:1.15rem; line-height:1.4; color:#888888; margin-top:0.5rem;">
+        <div style="font-size:1rem; line-height:1.4; color:#888888; margin-top:0.5rem;">
         ⚠️ <strong>Lecture des contributions locales</strong><br>
         Les barres ci-dessus montrent l'impact de chaque variable sur le
         <em>score interne de risque</em> du modèle <strong>XGBoost</strong>, avant calibration
@@ -143,6 +160,14 @@ def onglet_3():
 
     # ===== Explication reformulée pour le métier (pleine largeur) =====
     st.subheader("Explication reformulée pour le métier")
+    
+    st.markdown(
+        """
+        <div style="font-size:1.1rem;">
+        Cette section traduit l’analyse du modèle en une <strong>explication claire et compréhensible</strong>, afin de faciliter l’interprétation de la décision par les équipes métier ou le client.
+        </div>
+        """
+    )
 
     if st.button("Générer une explication métier (LLM)"):
         with st.spinner("Génération de l'explication en langage naturel..."):

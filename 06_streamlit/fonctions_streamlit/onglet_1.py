@@ -102,7 +102,7 @@ def onglet_1():
     bottom_left, bottom_right = st.columns([1, 1], gap="medium")
 
     with bottom_left:
-        st.subheader("Précision–Rappel (train vs test)")
+        st.subheader("Précision-Rappel (train vs test)")
         fig_pr = afficher_courbe_pr_train_test(
             y_train=y_train,
             train_proba=train_proba,
@@ -115,7 +115,7 @@ def onglet_1():
         st.markdown(
             """
             <div style="font-size:1.1rem;">
-    La courbe <strong>Précision–Rappel</strong> montre qu’il existe un large éventail
+    La courbe <strong>Précision-Rappel</strong> montre qu’il existe un large éventail
     de seuils pour lesquels le modèle conserve un <strong>rappel élevé</strong>, au
     prix d’une <strong>précision</strong> plus modérée. Le seuil de <strong>19,1%</strong> retenu sur
     l’échantillon de validation privilégie volontairement la captation

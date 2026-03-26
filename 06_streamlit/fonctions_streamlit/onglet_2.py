@@ -30,6 +30,12 @@ def onglet_2():
     Les <strong>indicateurs métier</strong> présentés sous le graphique (taux de capture de fraude,
     taux de perte, taux d’alerte, ratio faux positifs / vrais positifs, etc.)
     aident à juger si ce compromis <strong>coût / protection</strong> reste acceptable pour la banque.
+    
+    Les coûts ont été fixés à <strong>25 € pour un faux positif</strong> et <strong>125 € pour un faux négatif</strong>.
+    Ces ordres de grandeur s’inspirent des pratiques du secteur bancaire, où une fraude non détectée
+    (coûts de remboursement, traitement et impact client) est nettement plus coûteuse qu’un blocage injustifié.
+    Le ratio d’environ <strong>5x</strong> reflète cette hiérarchie métier et oriente le modèle vers une meilleure
+    détection des fraudes tout en maintenant un volume d’alertes acceptable.
         </div>
         """,
         unsafe_allow_html=True

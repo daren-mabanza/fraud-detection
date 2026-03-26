@@ -24,16 +24,12 @@ def onglet_4():
     st.header("Votre transaction serait-elle considérée comme frauduleuse ?")
     
     st.markdown(
-    """
-⚠️ **Avertissement**
-
-Le modèle a été entraîné sur des **transactions simulées**.  
-La probabilité affichée dans cet onglet indique donc comment la transaction créée se positionne par rapport aux **schémas appris dans ces données générées**, et non par rapport à l’ensemble des situations réelles possibles.
-Une transaction pouvant paraître très étrange dans la réalité ne sera donc pas forcément classée comme très risquée ici, si ce type de cas n’est pas correctement représenté dans les données simulées d’entraînement.
-
-Ce score doit être lu comme une **illustration du fonctionnement du modèle dans un cadre simulé**.
-"""
-    )
+        """
+    <div style="font-size:1.3rem;">
+    Renseignez les caractéristiques d’une transaction (type d’achat, montant, heure, profil client) puis cliquez sur <strong>“Évaluer la transaction”</strong> pour obtenir une <strong>estimation du risque de fraude</strong> et la décision associée.
+    </div>    
+        """  
+        )
 
     # États qu'on propose explicitement dans l'UI
     etats_principaux = ["CA", "NY", "TX", "FL", "NJ"]
@@ -205,3 +201,16 @@ Ce score doit être lu comme une **illustration du fonctionnement du modèle dan
             "heure_transaction": [heure]
         }
         st.table(pd.DataFrame(recap))
+        
+        st.markdown(
+        """
+        <div style="font-size:1rem;">
+        ⚠️ **Avertissement**
+        Le modèle a été entraîné sur des **transactions simulées**.  
+        La probabilité affichée dans cet onglet indique donc comment la transaction créée se positionne par rapport aux **schémas appris dans ces données générées**, et non par rapport à l’ensemble des situations réelles possibles.
+        Une transaction pouvant paraître très étrange dans la réalité ne sera donc pas forcément classée comme très risquée ici, si ce type de cas n’est pas correctement représenté dans les données simulées d’entraînement.
+
+        Ce score doit être lu comme une **illustration du fonctionnement du modèle dans un cadre simulé**.
+        </div>
+        """
+        )
