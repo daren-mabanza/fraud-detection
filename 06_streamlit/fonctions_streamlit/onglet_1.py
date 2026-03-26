@@ -144,8 +144,7 @@ def onglet_1():
             <strong>détection des fraudes</strong> et <strong>volume d’alertes</strong>. Le seuil de <strong>19,1%</strong>
             retenu privilégie un <strong>rappel élevé</strong> (<strong>≈ 79 %</strong>), au prix d’une
             <strong>précision</strong> plus modérée, en cohérence avec la hiérarchie des coûts où les
-            fraudes non détectées sont plus pénalisantes que les fausses alertes.<br><br>
-
+            fraudes non détectées sont plus pénalisantes que les fausses alertes.
             On observe par ailleurs une <strong>baisse du taux de fraude</strong> entre les périodes
             (≈ 0,56 % en train, ≈ 0,54 % en validation, ≈ 0,33 % en test), correspondant à un
             <strong>drift de prévalence</strong>. Cette évolution du contexte impacte directement
@@ -174,8 +173,7 @@ def onglet_1():
             indiquent que les probabilités prédites restent globalement
             cohérentes entre <strong>train, validation et test</strong>. Une légère tendance à
             <strong>surestimer le risque</strong> est observée en test, en lien avec la baisse du
-            taux de fraude sur la période récente (drift de prévalence).<br><br>
-
+            taux de fraude sur la période récente (drift de prévalence).
             Les <strong>scores</strong> peuvent ainsi être interprétés comme une véritable
             <strong>échelle de risque</strong>, exploitable pour fixer le seuil de décision et
             prioriser les <strong>investigations métier</strong>.
@@ -207,5 +205,5 @@ def onglet_1():
         Un <strong>ajustement régulier du seuil de décision</strong> en fonction de l’évolution du taux de fraude reste toutefois nécessaire pour maintenir un compromis optimal entre <strong>détection</strong> et <strong>expérience client</strong>.
         </div>
         """
-    )
+    ,unsafe_allow_html=True)
 
