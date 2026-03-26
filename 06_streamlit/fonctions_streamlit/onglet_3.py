@@ -83,10 +83,9 @@ def onglet_3():
     st.markdown("""
         <div style="font-size:1.1rem;">
         Cet outil permet d’examiner une transaction individuelle et de comprendre pourquoi elle est considérée comme <strong>frauduleuse ou légitime</strong>.  
-        En sélectionnant une ligne, vous pouvez voir la <strong>probabilité de fraude</strong> attribuée par le modèle ainsi une <strong>analyse détaillée</strong> du niveau de risque ainsi qu’aux principaux facteurs ayant influencé la décision, afin de rendre le modèle <strong>compréhensible et exploitable</strong> par les équipes métier.
+        En sélectionnant une ligne, vous pouvez consulter la <strong>probabilité de fraude</strong> estimée ainsi qu’une <strong>analyse détaillée</strong> des principaux facteurs ayant influencé la décision, afin de rendre le modèle <strong>compréhensible et exploitable</strong> par les équipes métier.
         </div>
-                """
-        )
+        """, unsafe_allow_html=True)
     
     st.dataframe(sample_data, hide_index=True, use_container_width=True, height = 350)
 
@@ -118,11 +117,12 @@ def onglet_3():
     st.subheader("Explication locale (SHAP - waterfall)")
     
     st.markdown(
-        """
+    """
         <div style="font-size:1.1rem;">
         Cette section explique <strong>comment chaque variable influence le niveau de risque</strong> pour cette transaction, en montrant ce qui pousse la décision vers une fraude ou vers un comportement légitime.
         </div>
-        """
+    """,
+    unsafe_allow_html=True
     )
 
     shap_arr = np.array(shap_values)
@@ -162,11 +162,12 @@ def onglet_3():
     st.subheader("Explication reformulée pour le métier")
     
     st.markdown(
-        """
+    """
         <div style="font-size:1.1rem;">
         Cette section traduit l’analyse du modèle en une <strong>explication claire et compréhensible</strong>, afin de faciliter l’interprétation de la décision par les équipes métier ou le client.
         </div>
-        """
+    """,
+    unsafe_allow_html=True
     )
 
     if st.button("Générer une explication métier (LLM)"):

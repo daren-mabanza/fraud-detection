@@ -24,12 +24,13 @@ def onglet_4():
     st.header("Votre transaction serait-elle considérée comme frauduleuse ?")
     
     st.markdown(
-        """
-    <div style="font-size:1.3rem;">
-    Renseignez les caractéristiques d’une transaction (type d’achat, montant, heure, profil client) puis cliquez sur <strong>“Évaluer la transaction”</strong> pour obtenir une <strong>estimation du risque de fraude</strong> et la décision associée.
-    </div>    
-        """  
-        )
+    """
+        <div style="font-size:1.3rem;">
+        Renseignez les caractéristiques d’une transaction (type d’achat, montant, heure, profil client) puis cliquez sur <strong>“Évaluer la transaction”</strong> pour obtenir une <strong>estimation du risque de fraude</strong> et la décision associée.
+        </div>    
+    """,
+    unsafe_allow_html=True
+)
 
     # États qu'on propose explicitement dans l'UI
     etats_principaux = ["CA", "NY", "TX", "FL", "NJ"]
