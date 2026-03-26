@@ -182,6 +182,8 @@ def onglet_1():
             unsafe_allow_html=True,
         )
         
+    st.subheader("Conclusion")
+        
     st.markdown("""     
         <div style="font-size:1.15rem; line-height:1.6;">
         En synthèse, les trois analyses apportent une lecture cohérente du comportement du modèle.
@@ -190,16 +192,16 @@ def onglet_1():
         La <strong>courbe Précision-Rappel</strong> illustre un compromis adapté au contexte métier, avec un <strong>rappel élevé</strong> privilégié au regard du coût des fraudes non détectées.  
         Les <strong>courbes de calibration</strong> confirment que les probabilités produites restent <strong>cohérentes et exploitables</strong> comme une véritable échelle de risque.
 
-        <br><br>
+        <br>
 
         Les écarts observés entre les périodes s’expliquent principalement par une <strong>baisse du taux de fraude</strong> (drift de prévalence), passant d’environ <strong>0,05 % à 0,03 %</strong>, ce qui impacte mécaniquement la précision et conduit à une <strong>légère surestimation du risque</strong> sur les données les plus récentes.
 
-        <br><br>
+        <br>
 
         La <strong>stabilité des performances en AUC</strong> ainsi que des <strong>PSI faibles (voir Github)</strong> sur les probabilités et les variables indiquent que la structure des données reste globalement inchangée.  
         Le modèle conserve donc sa capacité à <strong>discriminer efficacement</strong> les transactions, sans signe de dégradation de sa robustesse.
 
-        <br><br>
+        <br>
 
         Dans ce contexte, le modèle apparaît <strong>stable, cohérent et exploitable</strong> dans un cadre opérationnel bancaire.  
         Un <strong>ajustement régulier du seuil de décision</strong> en fonction de l’évolution du taux de fraude reste toutefois nécessaire pour maintenir un compromis optimal entre <strong>détection</strong> et <strong>expérience client</strong>.
