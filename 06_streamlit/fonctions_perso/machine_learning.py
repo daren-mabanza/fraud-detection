@@ -13,8 +13,10 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import shap
-
-from sklearn.pipeline import Pipeline
+import plotly.graph_objects as go
+from scipy.stats import gaussian_kde
+from typing import Literal
+from plotly.subplots import make_subplots
 
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, 
@@ -780,3 +782,428 @@ class BinaryMetricsSimple:
     def get_metrics_df(self):
         """Retourne TOUTES les metriques en DataFrame."""
         return pd.DataFrame(list(self.metrics.items()), columns=['Metrique', 'Valeur']).round(4)
+
+
+
+class PSICalculator:
+    """
+    Calcule le Population Stability Index (PSI) entre deux distributions numériques.
+
+    Parameters
+    ----------
+    reference : pd.DataFrame | np.ndarray
+        Distribution(s) de référence. Si DataFrame, analyse multi-variables.
+    current : pd.DataFrame | np.ndarray
+        Distribution(s) courante(s).
+    bins : int
+        Nombre de bins pour la discrétisation (défaut: 10).
+    columns : list[str] | None
+        Colonnes à analyser (si DataFrame). None = toutes les colonnes numériques.
+    """
+
+    PSI_THRESHOLDS = {
+        "stable":   (0.0,  0.1),
+        "moderate": (0.1,  0.2),
+        "unstable": (0.2,  float("inf")),
+    }
+
+    PSI_LABELS = {
+        "stable":   ("✅ Stable",   "Pas de dérive significative détectée."),
+        "moderate": ("⚠️ Modéré",   "Légère dérive — surveiller la variable."),
+        "unstable": ("🚨 Instable", "Dérive forte — réentraînement recommandé."),
+    }
+
+    PSI_COLORS = {
+        "stable":   "#2ecc71",
+        "moderate": "#f39c12",
+        "unstable": "#e74c3c",
+    }
+
+    def __init__(
+        self,
+        reference: np.ndarray | pd.DataFrame,
+        current:   np.ndarray | pd.DataFrame,
+        bins: int = 10,
+        columns: list[str] | None = None,
+    ):
+        # ── Normalisation en DataFrame interne ─────────────────────────
+        if isinstance(reference, np.ndarray):
+            reference = pd.DataFrame(reference, columns=columns or ["variable"])
+        if isinstance(current, np.ndarray):
+            current = pd.DataFrame(current, columns=columns or ["variable"])
+
+        if columns:
+            reference = reference[columns]
+            current   = current[columns]
+        else:
+            # Garder uniquement les colonnes numériques communes
+            num_cols = reference.select_dtypes(include="number").columns
+            common   = [c for c in num_cols if c in current.columns]
+            reference = reference[common]
+            current   = current[common]
+
+        self.reference = reference
+        self.current   = current
+        self.bins      = bins
+        self.columns   = list(reference.columns)
+
+        # Cache par variable
+        self._results: dict[str, dict] = {}
+
+    # ------------------------------------------------------------------
+    # Calcul PSI (une variable)
+    # ------------------------------------------------------------------
+
+    def _compute_bin_edges(self, ref: np.ndarray, cur: np.ndarray) -> np.ndarray:
+        quantiles = np.linspace(0, 100, self.bins + 1)
+        edges = np.percentile(ref, quantiles)
+        edges = np.unique(edges)
+        edges[0]  = min(edges[0],  cur.min()) - 1e-9
+        edges[-1] = max(edges[-1], cur.max()) + 1e-9
+        return edges
+
+    def _compute_one(self, col: str) -> dict:
+        """Calcule le PSI pour une seule variable et met en cache."""
+        if col in self._results:
+            return self._results[col]
+
+        ref = self.reference[col].dropna().values.astype(float)
+        cur = self.current[col].dropna().values.astype(float)
+
+        edges = self._compute_bin_edges(ref, cur)
+
+        ref_counts, _ = np.histogram(ref, bins=edges)
+        cur_counts, _ = np.histogram(cur, bins=edges)
+
+        ref_pct = ref_counts / len(ref)
+        cur_pct = cur_counts / len(cur)
+
+        ref_pct = np.where(ref_pct == 0, 1e-6, ref_pct)
+        cur_pct = np.where(cur_pct == 0, 1e-6, cur_pct)
+
+        psi_per_bin = (cur_pct - ref_pct) * np.log(cur_pct / ref_pct)
+        psi_value   = float(np.sum(psi_per_bin))
+        level       = self._get_level(psi_value)
+
+        result = {
+            "psi":         psi_value,
+            "level":       level,
+            "psi_per_bin": psi_per_bin,
+            "bin_edges":   edges,
+            "ref_pct":     ref_pct,
+            "cur_pct":     cur_pct,
+            "ref":         ref,
+            "cur":         cur,
+        }
+        self._results[col] = result
+        return result
+
+    def compute(self, col: str | None = None) -> float | dict[str, float]:
+        """
+        Calcule le PSI.
+
+        Parameters
+        ----------
+        col : str | None
+            Si None, calcule pour toutes les colonnes.
+
+        Returns
+        -------
+        float si col est spécifié, dict[str → float] sinon.
+        """
+        if col:
+            return self._compute_one(col)["psi"]
+        return {c: self._compute_one(c)["psi"] for c in self.columns}
+
+    # ------------------------------------------------------------------
+    # Interprétation
+    # ------------------------------------------------------------------
+
+    def _get_level(self, psi: float) -> str:
+        for level, (low, high) in self.PSI_THRESHOLDS.items():
+            if low <= psi < high:
+                return level
+        return "unstable"
+
+    def interpret(self, col: str | None = None) -> str:
+        """
+        Retourne PSI + interprétation pour une variable ou toutes.
+
+        Parameters
+        ----------
+        col : str | None
+            Variable cible. Si None, affiche toutes les variables.
+        """
+        if col:
+            r = self._compute_one(col)
+            label, message = self.PSI_LABELS[r["level"]]
+            return (
+                f"[{col}]  PSI = {r['psi']:.4f}  |  {label}\n"
+                f"         → {message}"
+            )
+
+        lines = []
+        for c in self.columns:
+            r = self._compute_one(c)
+            label, message = self.PSI_LABELS[r["level"]]
+            lines.append(
+                f"[{c}]  PSI = {r['psi']:.4f}  |  {label}\n"
+                f"         → {message}"
+            )
+        return "\n\n".join(lines)
+
+    # ------------------------------------------------------------------
+    # Tableau récapitulatif (multi-variables)
+    # ------------------------------------------------------------------
+
+    def summary(self) -> pd.DataFrame:
+        """
+        Retourne un DataFrame récapitulatif du PSI pour toutes les variables.
+
+        Returns
+        -------
+        pd.DataFrame avec colonnes : variable, psi, level, label, message
+        """
+        rows = []
+        for c in self.columns:
+            r = self._compute_one(c)
+            label, message = self.PSI_LABELS[r["level"]]
+            rows.append({
+                "Variable": c,
+                "PSI":      round(r["psi"], 4),
+                "Statut":   label,
+                "Message":  message,
+            })
+        df = pd.DataFrame(rows).sort_values("PSI", ascending=False).reset_index(drop=True)
+        return df
+
+    def plot_summary(self, title: str = "PSI — Récapitulatif des variables") -> go.Figure:
+        """
+        Tableau interactif Plotly + barplot horizontal du PSI par variable.
+        Affiche un indicateur coloré par niveau de dérive.
+        """
+        df = self.summary()
+
+        colors = [self.PSI_COLORS[self._get_level(v)] for v in df["PSI"]]
+
+        fig = make_subplots(
+            rows=1, cols=2,
+            column_widths=[0.45, 0.55],
+            specs=[[{"type": "table"}, {"type": "bar"}]],
+        )
+
+        # ── Tableau ────────────────────────────────────────────────────
+        fig.add_trace(
+            go.Table(
+                header=dict(
+                    values=["<b>Variable</b>", "<b>PSI</b>", "<b>Statut</b>"],
+                    fill_color="#2c3e50",
+                    font=dict(color="white", size=13),
+                    align="center",
+                    height=32,
+                ),
+                cells=dict(
+                    values=[df["Variable"], df["PSI"], df["Statut"]],
+                    fill_color=[
+                        ["#f8f9fa"] * len(df),
+                        ["#f8f9fa"] * len(df),
+                        colors,
+                    ],
+                    font=dict(size=12),
+                    align=["left", "center", "center"],
+                    height=28,
+                ),
+            ),
+            row=1, col=1,
+        )
+
+        # ── Barplot horizontal ─────────────────────────────────────────
+        fig.add_trace(
+            go.Bar(
+                x=df["PSI"],
+                y=df["Variable"],
+                orientation="h",
+                marker_color=colors,
+                text=[f"{v:.4f}" for v in df["PSI"]],
+                textposition="outside",
+                name="PSI",
+            ),
+            row=1, col=2,
+        )
+
+        # Lignes de seuil
+        for threshold, label, color in [
+            (0.1, "Seuil modéré (0.1)",  "#f39c12"),
+            (0.2, "Seuil instable (0.2)", "#e74c3c"),
+        ]:
+            fig.add_vline(
+                x=threshold,
+                line_dash="dash",
+                line_color=color,
+                annotation_text=label,
+                annotation_position="top",
+                row=1, col=2,
+            )
+
+        fig.update_layout(
+            title=dict(text=title, x=0.5, font=dict(size=16)),
+            template="plotly_white",
+            showlegend=False,
+            margin=dict(l=20, r=60, t=70, b=40),
+            height=max(350, 40 * len(df) + 150),
+        )
+        fig.update_xaxes(title_text="PSI", row=1, col=2)
+
+        return fig
+
+    # ------------------------------------------------------------------
+    # Visualisation — Distribution (une variable)
+    # ------------------------------------------------------------------
+
+    def plot_distribution_comparison(
+        self,
+        col: str | None = None,
+        label_1: str = "Référence",
+        label_2: str = "Courant",
+        mode: Literal["kde", "hist"] = "kde",
+        bins: int = 50,
+        title: str | None = None,
+        color_1: str = "#3498db",
+        color_2: str = "#e74c3c",
+        show_psi_annotation: bool = True,
+    ) -> go.Figure:
+        """
+        Compare les deux distributions pour une variable (KDE ou histogramme).
+        Si col=None et une seule variable, l'utilise automatiquement.
+        """
+        col = col or self.columns[0]
+        r   = self._compute_one(col)
+        ref, cur = r["ref"], r["cur"]
+        title = title or f"Comparaison des distributions — {col}"
+
+        fig = go.Figure()
+
+        # ── HISTOGRAMME ────────────────────────────────────────────────
+        if mode == "hist":
+            for data, label, color in [(ref, label_1, color_1), (cur, label_2, color_2)]:
+                fig.add_trace(go.Histogram(
+                    x=data, nbinsx=bins, name=label,
+                    opacity=0.55, marker_color=color,
+                    histnorm="probability density",
+                ))
+            fig.update_layout(barmode="overlay")
+
+        # ── KDE ────────────────────────────────────────────────────────
+        elif mode == "kde":
+            x_min  = min(ref.min(), cur.min())
+            x_max  = max(ref.max(), cur.max())
+            margin = (x_max - x_min) * 0.05
+            x_grid = np.linspace(x_min - margin, x_max + margin, 1_000)
+
+            y_ref = gaussian_kde(ref)(x_grid)
+            y_cur = gaussian_kde(cur)(x_grid)
+
+            # Zone de dérive ombrée
+            fig.add_trace(go.Scatter(
+                x=np.concatenate([x_grid, x_grid[::-1]]),
+                y=np.concatenate([np.maximum(y_ref, y_cur),
+                                  np.minimum(y_ref, y_cur)[::-1]]),
+                fill="toself",
+                fillcolor=f"rgba(231,76,60,0.08)",
+                line=dict(color="rgba(0,0,0,0)"),
+                name="Zone de dérive",
+                hoverinfo="skip",
+            ))
+
+            fig.add_trace(go.Scatter(
+                x=x_grid, y=y_ref, mode="lines", name=label_1,
+                line=dict(width=3, color=color_1),
+            ))
+            fig.add_trace(go.Scatter(
+                x=x_grid, y=y_cur, mode="lines", name=label_2,
+                line=dict(width=3, color=color_2, dash="dash"),
+            ))
+        else:
+            raise ValueError("mode doit être 'kde' ou 'hist'")
+
+        # ── Annotation PSI ─────────────────────────────────────────────
+        if show_psi_annotation:
+            emoji = self.PSI_LABELS[r["level"]][0].split()[0]
+            fig.add_annotation(
+                xref="paper", yref="paper", x=0.99, y=0.97,
+                text=f"<b>PSI = {r['psi']:.4f}</b> {emoji}",
+                showarrow=False, bgcolor="white",
+                bordercolor="#cccccc", borderwidth=1, borderpad=6,
+                font=dict(size=13), align="right",
+            )
+
+        fig.update_layout(
+            title=dict(text=title, x=0.5, font=dict(size=16)),
+            xaxis_title="Valeurs",
+            yaxis_title="Densité" if mode == "kde" else "Fréquence",
+            template="plotly_white",
+            legend=dict(
+                orientation="h", y=1.05, x=0.5, xanchor="center",
+                bgcolor="rgba(255,255,255,0.8)",
+                bordercolor="#dddddd", borderwidth=1,
+            ),
+            margin=dict(l=60, r=40, t=70, b=50),
+            hovermode="x unified",
+        )
+        return fig
+
+    # ------------------------------------------------------------------
+    # Visualisation — PSI par bin (une variable)
+    # ------------------------------------------------------------------
+
+    def plot_psi_by_bin(
+        self,
+        col: str | None = None,
+        title: str | None = None,
+    ) -> go.Figure:
+        """Barplot du PSI décomposé par bin pour une variable."""
+        col   = col or self.columns[0]
+        r     = self._compute_one(col)
+        title = title or f"Contribution PSI par bin — {col}"
+
+        edges       = r["bin_edges"]
+        psi_per_bin = r["psi_per_bin"]
+
+        bin_labels = [
+            f"[{edges[i]:.2f}, {edges[i+1]:.2f})"
+            for i in range(len(edges) - 1)
+        ]
+        colors = [
+            "#e74c3c" if v >= 0.02 else "#f39c12" if v >= 0.01 else "#2ecc71"
+            for v in psi_per_bin
+        ]
+
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            x=bin_labels, y=psi_per_bin,
+            marker_color=colors, name="PSI par bin",
+            text=[f"{v:.4f}" for v in psi_per_bin],
+            textposition="outside",
+        ))
+        fig.add_hline(
+            y=r["psi"], line_dash="dot", line_color="#8e44ad",
+            annotation_text=f"PSI total = {r['psi']:.4f}",
+            annotation_position="top right",
+        )
+        fig.update_layout(
+            title=dict(text=title, x=0.5),
+            xaxis_title="Bins",
+            yaxis_title="Contribution PSI",
+            xaxis_tickangle=-35,
+            template="plotly_white",
+            margin=dict(l=60, r=40, t=70, b=120),
+            showlegend=False,
+        )
+        return fig
+
+# print(psi.interpret())
+#fig_kde  = psi.plot_distribution_comparison(mode="kde")
+#fig_hist = psi.plot_distribution_comparison(mode="hist")
+#fig_bins = psi.plot_psi_by_bin()
+#fig_kde.show()
+#fig_bins.show()

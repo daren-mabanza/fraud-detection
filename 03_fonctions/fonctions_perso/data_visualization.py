@@ -2,6 +2,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import math
 import numpy as np
+import plotly.graph_objects as go
+from scipy.stats import gaussian_kde
 
 def plot_grille_distribution(df, columns=None, n_cols=3, figsize=(16, 4)):
     """

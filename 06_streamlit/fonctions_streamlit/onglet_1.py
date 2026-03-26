@@ -5,7 +5,7 @@
 from config import ROOT
 import streamlit as st
 import joblib
-from fonctions_streamlit.viz_onglet_1 import afficher_metriques_binaires, afficher_matrice_confusion, afficher_courbe_pr_train_test, afficher_courbe_calibration_train_test
+from fonctions_streamlit.viz_onglet_1 import afficher_metriques_binaires, afficher_matrice_confusion, afficher_courbe_pr_train_test, afficher_courbe_calibration_train_test, afficher_courbe_roc_auc_train_test
 
 
 # ==========================================
@@ -98,10 +98,35 @@ def onglet_1():
 
     st.markdown("---")
 
-    # ------------------ Bas : PR et calibration -----------------------------
-    bottom_left, bottom_right = st.columns([1, 1], gap="medium")
+# ------------------ Bas : ROC, PR et calibration -----------------------------
+    bottom_left, bottom_center, bottom_right = st.columns(3, gap="medium")
 
     with bottom_left:
+        st.subheader("ROC-AUC (train vs test)")
+        fig_roc = afficher_courbe_roc_auc_train_test(
+            y_train=y_train,
+            train_proba=train_proba,
+            y_test=y_test,
+            test_proba=test_proba,
+            figsize=(6, 5),
+        )
+        st.pyplot(fig_roc, width="content")
+
+        st.markdown(
+            """
+            <div style="font-size:1.1rem;">
+            La courbe <strong>ROC</strong> montre que le modèle conserve une excellente capacité
+            à <strong>distinguer</strong> les transactions frauduleuses des transactions légitimes,
+            quel que soit le seuil retenu. La proximité entre les courbes train et test,
+            ainsi que des <strong>ROC-AUC très élevés</strong> dans les deux cas, indiquent que le
+            modèle maintient un <strong>fort pouvoir discriminant</strong> et une performance
+            globalement stable entre les différentes périodes.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with bottom_center:
         st.subheader("Précision-Rappel (train vs test)")
         fig_pr = afficher_courbe_pr_train_test(
             y_train=y_train,
@@ -115,13 +140,16 @@ def onglet_1():
         st.markdown(
             """
             <div style="font-size:1.1rem;">
-    La courbe <strong>Précision-Rappel</strong> montre qu’il existe un large éventail
-    de seuils pour lesquels le modèle conserve un <strong>rappel élevé</strong>, au
-    prix d’une <strong>précision</strong> plus modérée. Le seuil de <strong>19,1%</strong> retenu sur
-    l’échantillon de validation privilégie volontairement la captation
-    de fraudes (<strong>recall ≈ 79 %</strong>) au détriment d’une précision parfaite,
-    conformément à la hiérarchie des coûts où les <strong>fraudes non détectées</strong>
-    sont beaucoup plus pénalisantes que les <strong>fausses alertes</strong>.
+            La courbe <strong>Précision-Rappel</strong> met en évidence le compromis entre
+            <strong>détection des fraudes</strong> et <strong>volume d’alertes</strong>. Le seuil de <strong>19,1%</strong>
+            retenu privilégie un <strong>rappel élevé</strong> (<strong>≈ 79 %</strong>), au prix d’une
+            <strong>précision</strong> plus modérée, en cohérence avec la hiérarchie des coûts où les
+            fraudes non détectées sont plus pénalisantes que les fausses alertes.<br><br>
+
+            On observe par ailleurs une <strong>baisse du taux de fraude</strong> entre les périodes
+            (≈ 0,56 % en train, ≈ 0,54 % en validation, ≈ 0,33 % en test), correspondant à un
+            <strong>drift de prévalence</strong>. Cette évolution du contexte impacte directement
+            le compromis précision-rappel pour un seuil fixé sur une période antérieure.
             </div>
             """,
             unsafe_allow_html=True,
@@ -142,16 +170,42 @@ def onglet_1():
         st.markdown(
             """
             <div style="font-size:1.1rem;">
-    Les courbes de <strong>calibration</strong> et les <strong>Brier scores</strong> très faibles
-    indiquent que les probabilités prédites restent globalement
-    cohérentes entre <strong>train, validation et test</strong>. La légère tendance à
-    <strong>surestimer le risque</strong> en test s’explique par la baisse du taux de
-    fraude sur la période récente (drift), plus que par un <strong>surapprentissage</strong>
-    du modèle. Cela permet d’utiliser les <strong>scores</strong> comme une véritable
-    <strong>échelle de risque</strong>, exploitable pour fixer le seuil et prioriser
-    les <strong>investigations métier</strong>.
+            Les courbes de <strong>calibration</strong> et les <strong>Brier scores</strong> très faibles
+            indiquent que les probabilités prédites restent globalement
+            cohérentes entre <strong>train, validation et test</strong>. Une légère tendance à
+            <strong>surestimer le risque</strong> est observée en test, en lien avec la baisse du
+            taux de fraude sur la période récente (drift de prévalence).<br><br>
+
+            Les <strong>scores</strong> peuvent ainsi être interprétés comme une véritable
+            <strong>échelle de risque</strong>, exploitable pour fixer le seuil de décision et
+            prioriser les <strong>investigations métier</strong>.
             </div>
             """,
             unsafe_allow_html=True,
         )
+        
+    st.markdown("""     
+        <div style="font-size:1.15rem; line-height:1.6;">
+        En synthèse, les trois analyses apportent une lecture cohérente du comportement du modèle.
+
+        La <strong>courbe ROC</strong> met en évidence un <strong>fort pouvoir discriminant</strong>, stable entre train et test.  
+        La <strong>courbe Précision-Rappel</strong> illustre un compromis adapté au contexte métier, avec un <strong>rappel élevé</strong> privilégié au regard du coût des fraudes non détectées.  
+        Les <strong>courbes de calibration</strong> confirment que les probabilités produites restent <strong>cohérentes et exploitables</strong> comme une véritable échelle de risque.
+
+        <br><br>
+
+        Les écarts observés entre les périodes s’expliquent principalement par une <strong>baisse du taux de fraude</strong> (drift de prévalence), passant d’environ <strong>0,05 % à 0,03 %</strong>, ce qui impacte mécaniquement la précision et conduit à une <strong>légère surestimation du risque</strong> sur les données les plus récentes.
+
+        <br><br>
+
+        La <strong>stabilité des performances en AUC</strong> ainsi que des <strong>PSI faibles (voir Github)</strong> sur les probabilités et les variables indiquent que la structure des données reste globalement inchangée.  
+        Le modèle conserve donc sa capacité à <strong>discriminer efficacement</strong> les transactions, sans signe de dégradation de sa robustesse.
+
+        <br><br>
+
+        Dans ce contexte, le modèle apparaît <strong>stable, cohérent et exploitable</strong> dans un cadre opérationnel bancaire.  
+        Un <strong>ajustement régulier du seuil de décision</strong> en fonction de l’évolution du taux de fraude reste toutefois nécessaire pour maintenir un compromis optimal entre <strong>détection</strong> et <strong>expérience client</strong>.
+        </div>
+        """
+    )
 

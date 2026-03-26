@@ -5,7 +5,6 @@
 from config import ROOT
 import streamlit as st
 import numpy as np
-import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import (
     accuracy_score,
@@ -18,7 +17,9 @@ from sklearn.metrics import (
     average_precision_score,
     confusion_matrix,
     precision_recall_curve,
-    brier_score_loss
+    brier_score_loss,
+    roc_curve,
+    auc
 )
 from sklearn.calibration import calibration_curve
 
@@ -334,3 +335,51 @@ def afficher_courbe_calibration_train_test(
 
     plt.tight_layout()
     return fig
+
+
+
+def afficher_courbe_roc_auc_train_test(y_train, train_proba, y_test, test_proba, 
+                                       figsize=(8, 6), save_path=None):
+    """
+    Trace les courbes ROC pour les sets d'entraînement et de test
+    et affiche les AUC, sans valeur de retour.
+    """
+
+    fpr_train, tpr_train, _ = roc_curve(y_train, train_proba)
+    fpr_test, tpr_test, _ = roc_curve(y_test, test_proba)
+
+    roc_auc_train = auc(fpr_train, tpr_train)
+    roc_auc_test = auc(fpr_test, tpr_test)
+
+    plt.figure(figsize=figsize)
+    plt.plot(fpr_train, tpr_train, color='blue', lw=2, 
+             label=f'Train AUC = {roc_auc_train:.3f}')
+    plt.plot(fpr_test, tpr_test, color='red', lw=2, linestyle='--', 
+             label=f'Test AUC = {roc_auc_test:.3f}')
+    plt.plot([0, 1], [0, 1], 'k--', lw=1, label='Aléatoire')
+
+    plt.xlabel('Taux de faux positifs (FPR)', fontsize=11)
+    plt.ylabel('Taux de vrais positifs (TPR)', fontsize=11)
+    plt.title('Courbes ROC - Train vs Test', fontsize=13, fontweight='bold')
+    plt.legend(loc='lower right', fontsize=10)
+    plt.grid(alpha=0.3, linestyle=':', linewidth=0.5)
+    plt.tight_layout()
+
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches="tight")
+        print(f"Figure sauvegardée : {save_path}")
+
+    overfitting_gap = roc_auc_train - roc_auc_test
+
+    print("\n" + "="*40)
+    print("RÉSULTATS ROC-AUC")
+    print("="*40)
+    print(f"AUC Train : {roc_auc_train:.4f}")
+    print(f"AUC Test  : {roc_auc_test:.4f}")
+    print(f"Écart     : {overfitting_gap:.4f}")
+
+    if overfitting_gap > 0.05:
+        print("⚠️  Attention : écart élevé (possible overfitting)")
+    else:
+        print("✓ Écart acceptable")
+    print("="*40)
