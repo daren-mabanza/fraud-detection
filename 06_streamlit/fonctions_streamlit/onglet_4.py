@@ -26,7 +26,7 @@ def onglet_4():
     st.markdown(
     """
         <div style="font-size:1.3rem;">
-        Renseignez les caractéristiques d’une transaction (type d’achat, montant, heure, profil client) puis cliquez sur <strong>“Évaluer la transaction”</strong> pour obtenir une <strong>estimation du risque de fraude</strong> et la décision associée.
+        Renseignez les caractéristiques d’une transaction (type d’achat, montant, heure, profil client) puis cliquez sur <strong>"Évaluer la transaction"</strong> pour obtenir une <strong>estimation du risque de fraude</strong> et la décision associée.
         </div>    
     """,
     unsafe_allow_html=True

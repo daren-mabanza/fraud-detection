@@ -67,6 +67,8 @@ def onglet_3():
     complétés par un indicateur d'<strong>anormalité de la transaction</strong>
     (if_score), pour différencier les opérations usuelles de celles qui
     ressemblent statistiquement à des fraudes.
+    
+    
     </div>
     """,
     unsafe_allow_html=True,
@@ -84,6 +86,8 @@ def onglet_3():
         <div style="font-size:1.1rem;">
         Cet outil permet d’examiner une transaction individuelle et de comprendre pourquoi elle est considérée comme <strong>frauduleuse ou légitime</strong>.  
         En sélectionnant une ligne, vous pouvez consulter la <strong>probabilité de fraude</strong> estimée ainsi qu’une <strong>analyse détaillée</strong> des principaux facteurs ayant influencé la décision, afin de rendre le modèle <strong>compréhensible et exploitable</strong> par les équipes métier.
+        
+        
         </div>
         """, unsafe_allow_html=True)
     
@@ -138,7 +142,7 @@ def onglet_3():
 
     st.markdown(
         """
-        <div style="font-size:1rem; line-height:1.4; color:#888888; margin-top:0.5rem;">
+        <div style="font-size:0.75rem; line-height:1.4; color:#888888; margin-top:0.5rem;">
         ⚠️ <strong>Lecture des contributions locales</strong><br>
         Les barres ci-dessus montrent l'impact de chaque variable sur le
         <em>score interne de risque</em> du modèle <strong>XGBoost</strong>, avant calibration
@@ -161,14 +165,6 @@ def onglet_3():
     # ===== Explication reformulée pour le métier (pleine largeur) =====
     st.subheader("Explication reformulée pour le métier")
     
-    st.markdown(
-    """
-        <div style="font-size:1.1rem;">
-        Cette section traduit l’analyse du modèle en une <strong>explication claire et compréhensible</strong>, afin de faciliter l’interprétation de la décision par les équipes métier ou le client.
-        </div>
-    """,
-    unsafe_allow_html=True
-    )
 
     if st.button("Générer une explication métier (LLM)"):
         with st.spinner("Génération de l'explication en langage naturel..."):
