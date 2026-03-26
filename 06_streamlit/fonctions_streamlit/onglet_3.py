@@ -60,12 +60,11 @@ def onglet_3():
     le plus influent sur le score de fraude, loin devant les autres
     variables. Les <strong>créneaux horaires</strong> (par exemple 22h-23h), certains
     <strong>types de magasins</strong> (transport, grande distribution) et l'<strong>if_score</strong>
-    apportent également une contribution notable au risque moyen.
+    (indicateur d'<strong>anormalité de la transaction</strong>) apportent également une contribution notable au risque moyen.
     <br><br>
     Concrètement, cela signifie que le modèle s'appuie d'abord sur des
     <strong>signaux simples et intuitifs</strong> (montant, heure, type de commerce),
-    complétés par un indicateur d'<strong>anormalité de la transaction</strong>
-    (if_score), pour différencier les opérations usuelles de celles qui
+    complétés par l'if_score pour différencier les opérations usuelles de celles qui
     ressemblent statistiquement à des fraudes.
     
     

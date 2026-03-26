@@ -187,11 +187,11 @@ def onglet_1():
         
     st.markdown("""     
         <div style="font-size:1.1rem; line-height:1.6;">
-        En synthèse, les trois analyses apportent une lecture cohérente du comportement du modèle. La <strong>courbe ROC</strong> met en évidence un <strong>fort pouvoir discriminant</strong>, stable entre train et test. La <strong>courbe Précision-Rappel</strong> illustre un compromis adapté au contexte métier, avec un <strong>rappel élevé</strong> privilégié au regard du coût des fraudes non détectées.  
+        Les trois analyses apportent une lecture cohérente du comportement du modèle. La <strong>courbe ROC</strong> met en évidence un <strong>fort pouvoir discriminant</strong>, stable entre train et test. La <strong>courbe Précision-Rappel</strong> illustre un compromis adapté au contexte métier, avec un <strong>rappel élevé</strong> privilégié au regard du coût des fraudes non détectées.  
         Les <strong>courbes de calibration</strong> confirment que les probabilités produites restent <strong>cohérentes et exploitables</strong> comme une véritable échelle de risque. Les écarts observés entre les périodes s’expliquent principalement par une <strong>baisse du taux de fraude</strong> (drift de prévalence), passant d’environ <strong>0,05 % à 0,03 %</strong>, ce qui impacte mécaniquement la précision et conduit à une <strong>légère surestimation du risque</strong> sur les données les plus récentes.
         La <strong>stabilité des performances en AUC</strong> ainsi que des <strong>PSI faibles (voir Github)</strong> sur les probabilités et les variables indiquent que la structure des données reste globalement inchangée.  
         Le modèle conserve donc sa capacité à <strong>discriminer efficacement</strong> les transactions, sans signe de dégradation de sa robustesse.
-        Dans ce contexte, le modèle apparaît <strong>stable, cohérent et exploitable</strong> dans un cadre opérationnel bancaire.  
+        Le modèle apparaît donc <strong>stable, cohérent et exploitable</strong> dans un cadre opérationnel bancaire.  
         </div>
         """
     ,unsafe_allow_html=True)

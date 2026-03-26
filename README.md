@@ -180,46 +180,77 @@ Le modèle présente des performances élevées, à la fois en termes de métriq
 - Précision ≈ **50 %** (≈ 1 alerte sur 2 pertinente)  
 - Alert rate ≈ **0,51 %** des transactions  
 
-Le **seuil optimal (0,191)** est déterminé sur l’échantillon de validation en minimisant le coût.
+Appliqué au jeu de test, le modèle conduit à un **coût total d’environ 134 225 €**, traduisant un compromis efficace entre faux positifs et faux négatifs.
 
-### Optimisation du seuil de décision
+---
 
-Le choix du seuil repose sur une **approche orientée métier**, consistant à minimiser le coût total lié aux erreurs de classification :
+### Analyse des performances du modèle
 
-- faux positif : 25 €  
-- faux négatif : 125 €  
+#### Pouvoir discriminant
 
-Pour cela, le coût total (FP + FN pondérés) est calculé pour différents seuils sur l’échantillon de validation.
+![Courbe ROC](./05_visualisations/courbe_auc.png)
 
-![Coût en fonction du seuil](./05_visualisations/cost_optimizer.png)
+La courbe ROC met en évidence une **excellente capacité du modèle à distinguer**
+les transactions frauduleuses des transactions légitimes.  
+La proximité entre les courbes train et test, ainsi que des **AUC très élevés (≈ 0,99)**,
+indiquent que le modèle conserve un **fort pouvoir discriminant** et une performance
+stable entre les différentes périodes.
 
-Ce graphique illustre l’évolution du coût en fonction du seuil de décision :
+---
 
-- un seuil trop faible entraîne un grand nombre de faux positifs, donc un coût élevé  
-- un seuil trop élevé laisse passer des fraudes, ce qui augmente également le coût  
-- un minimum apparaît pour un seuil intermédiaire  
+#### Compromis précision / rappel
 
-Le seuil optimal correspond au point minimisant ce coût, ici autour de **0,191**.
+![Precision-Recall curve](./05_visualisations/courbe_pr.png)
 
-Appliqué au jeu de test, il conduit à un **coût total d’environ 134 225 €**, traduisant un compromis efficace entre faux positifs et faux négatifs.
+La courbe Précision-Rappel illustre le compromis entre **détection des fraudes**
+et **volume d’alertes**. Le modèle maintient un **rappel élevé (~78,6 %)**,
+en cohérence avec la hiérarchie des coûts où les fraudes non détectées sont
+plus pénalisantes que les fausses alertes.
 
+---
+
+#### Calibration des probabilités
+
+![Calibration curve](./05_visualisations/courbe_calibration.png)
+
+Les courbes de calibration montrent que les probabilités prédites restent
+<strong>cohérentes</strong> entre train, validation et test.  
+Une légère tendance à **surestimer le risque** est observée en test,
+en lien avec la baisse du taux de fraude sur la période récente.
+
+Les scores peuvent ainsi être interprétés comme une **véritable échelle de risque**,
+exploitable pour prioriser les investigations métier.
+
+---
+
+### Effet du drift de prévalence
+
+Un **drift du taux de fraude** est observé entre les périodes
+(≈ 0,05 % → ≈ 0,03 %).  
+
+Cette baisse de la prévalence entraîne mécaniquement :
+
+- une **baisse de la précision**  
+- une **légère surestimation des probabilités de fraude**  
+
+Cependant :
+
+- la **stabilité de l’AUC** entre train et test  
+- ainsi que des **PSI faibles** sur les variables et les probabilités  
+
+indiquent que la **structure des données reste globalement stable**.
+
+Le modèle conserve donc sa capacité à **discriminer efficacement**
+les transactions, et les écarts observés s’expliquent principalement
+par ce **changement de prévalence**, et non par une instabilité du modèle.
+
+---
 Ces résultats montrent que le modèle :
 
 - détecte une part importante des fraudes  
 - génère un volume d’alertes maîtrisé  
-- reste cohérent avec les contraintes opérationnelles  
-
-![Precision-Recall curve](./05_visualisations/courbe_pr.png)
-
-![Calibration curve](./05_visualisations/courbe_calibration.png)
-
-Un **drift du taux de fraude** est observé entre validation et test (≈ 0,05 % → ≈ 0,03 %).  
-Ce phénomène explique :
-
-- une baisse de la précision  
-- un seuil devenu légèrement trop permissif  
-
-Un ajustement du seuil serait donc nécessaire en production pour rester optimal.
+- produit des probabilités cohérentes et exploitables  
+- reste stable malgré l’évolution du contexte  
 
 ---
 
