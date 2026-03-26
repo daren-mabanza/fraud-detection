@@ -25,7 +25,7 @@ def onglet_4():
     
     st.markdown(
     """
-        <div style="font-size:1.3rem;">
+        <div style="font-size:1.3rem; margin-bottom:20px;">
         Renseignez les caractéristiques d’une transaction (type d’achat, montant, heure, profil client) puis cliquez sur <strong>"Évaluer la transaction"</strong> pour obtenir une <strong>estimation du risque de fraude</strong> et la décision associée.
         </div>    
     """,
@@ -35,7 +35,7 @@ def onglet_4():
     st.markdown(
 """<div style="font-size:0.9rem; line-height:1.5; margin-bottom:20px;">
 <strong>⚠️ Avertissement</strong><br>
-Le modèle a été entraîné sur des <strong>transactions simulées</strong>.<br>
+Le modèle a été entraîné sur des <strong>transactions simulées</strong>.
 La probabilité affichée dans cet onglet indique donc comment la transaction créée se positionne par rapport aux 
 <strong>schémas appris dans ces données générées</strong>, et non par rapport à l’ensemble des situations réelles possibles.
 Une transaction pouvant paraître très étrange dans la réalité ne sera donc pas forcément classée comme très risquée ici, 
