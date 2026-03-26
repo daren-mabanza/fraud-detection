@@ -151,7 +151,7 @@ def onglet_2():
     <div style="font-size:1.1rem;">
     Le modèle détecte près de <strong>8 fraudes sur 10</strong> tout en ne mettant en alerte
     qu'environ <strong>0,51 % des transactions</strong>, ce qui reste compatible avec une
-    exploitation opérationnelle. La <strong>précision à 49,6 %</strong> signifie qu'une alerte
+    exploitation opérationnelle. La <strong>précision à 49,6 %</strong> signifie qu'environ une alerte
     sur deux correspond effectivement à une fraude, un niveau acceptable
     compte tenu de la rareté du phénomène et de la hiérarchie des coûts.
     Le <strong>ratio FP/TP ≈ 1</strong> traduit un équilibre raisonnable entre <strong>pertes évitées</strong>

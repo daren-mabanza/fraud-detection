@@ -175,9 +175,8 @@ def onglet_1():
     On observe néanmoins une <strong>légère surestimation du risque</strong> en test,
     qui s’explique par la <strong>baisse du taux de fraude</strong> sur la période récente
     (drift de prévalence), plutôt que par un changement du comportement du modèle.
-    Dans ce contexte, les <strong>scores</strong> peuvent être interprétés comme une
-    véritable <strong>échelle de risque</strong>, permettant de <strong>fixer le seuil de décision</strong>
-    et de <strong>prioriser efficacement les investigations métier</strong>.
+    Au vu des résultats, on peut néanmoins se servir de ces chiffres et les interpréter comme une
+    <strong>échelle de risque</strong> crédible permettant de <strong>fixer le seuil de décision</strong>.
     </div>
     """,
     unsafe_allow_html=True,

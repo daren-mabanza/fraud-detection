@@ -218,9 +218,6 @@ Les courbes de calibration montrent que les probabilités prédites restent
 Une légère tendance à **surestimer le risque** est observée en test,
 en lien avec la baisse du taux de fraude sur la période récente.
 
-Les scores peuvent ainsi être interprétés comme une **véritable échelle de risque**,
-exploitable pour prioriser les investigations métier.
-
 ---
 
 ### Effet du drift de prévalence
