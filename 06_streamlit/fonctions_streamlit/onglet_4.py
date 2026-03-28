@@ -174,7 +174,7 @@ def onglet_4():
                             background-color:#7f1d1d; color:#fef2f2;
                             border:1px solid #fecaca; margin-bottom:0.75rem;">
                     <strong>Décision automatique :</strong> transaction signalée comme <strong>suspecte</strong>
-                    (seuil {seuil:.3f}, proba fraude = {proba:.3f}).
+                    (seuil {seuil:.1%}, proba fraude = {proba:.1%}).
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -186,7 +186,7 @@ def onglet_4():
                             background-color:#064e3b; color:#ecfdf5;
                             border:1px solid #6ee7b7; margin-bottom:0.75rem;">
                     <strong>Décision automatique :</strong> transaction considérée comme
-                    <strong>légitime</strong> (seuil {seuil:.3f}, proba fraude = {proba:.3f}).
+                    <strong>légitime</strong> (seuil {seuil:.1%}, proba fraude = {proba:.1%}).
                 </div>
                 """,
                 unsafe_allow_html=True,
@@ -197,7 +197,7 @@ def onglet_4():
         with col_score:
             st.metric(
                 label="Probabilité estimée de fraude",
-                value=f"{proba:.3f}",
+                value=f"{proba:.1%}",
             )
         with col_decision:
             st.metric(
